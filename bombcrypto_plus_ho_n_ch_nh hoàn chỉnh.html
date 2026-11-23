@@ -1,0 +1,4198 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BombCrypto Plus - Bản quyền Bế Minh Đức</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts hỗ trợ đầy đủ tiếng Việt phong cách Arcade & Fantasy -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg-deep: #0b1021;
+      --panel-bg: #151d3b;
+      --panel-border: #3b4d8a;
+      --gold: #fbbf24;
+      --gold-dark: #b45309;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at 50% 20%, #1b2856 0%, #0b1021 75%);
+      color: #f8fafc;
+      font-family: 'Chakra Petch', 'Inter', sans-serif;
+      overflow: hidden;
+      height: 100dvh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Custom Scrollbar cho Modal */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #4f63ac;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #fbbf24;
+    }
+
+    /* Nút bấm phong cách Arcade 3D nổi */
+    .arcade-btn {
+      position: relative;
+      transition: transform 0.08s ease, filter 0.15s ease, box-shadow 0.08s ease;
+      border-bottom-width: 4px;
+      cursor: pointer;
+    }
+    .arcade-btn:hover:not(:disabled) {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+    .arcade-btn:active:not(:disabled) {
+      transform: translateY(2px);
+      border-bottom-width: 1px;
+    }
+    .arcade-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: grayscale(0.4);
+    }
+
+    /* Khung bảng điều khiển viền vàng retro */
+    .arcade-panel {
+      background: linear-gradient(180deg, rgba(28, 39, 79, 0.96) 0%, rgba(16, 23, 48, 0.98) 100%);
+      border: 2px solid #485fa8;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .gold-trim {
+      border-color: #f59e0b;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(253, 224, 71, 0.35);
+    }
+
+    /* Hiệu ứng nhấp nháy HUD khi nhận BCOIN */
+    @keyframes coinPulse {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.22); color: #fef08a; }
+      100% { transform: scale(1); }
+    }
+    .coin-pulse {
+      animation: coinPulse 0.32s ease-out;
+    }
+
+    /* Hiệu ứng hào quang Gacha */
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spinSlow 10s linear infinite;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.6) translateY(20px); opacity: 0; }
+      75% { transform: scale(1.05) translateY(-2px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .animate-pop-in {
+      animation: popIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Canvas sắc nét */
+    #gameCanvas {
+      display: block;
+      image-rendering: pixelated;
+      border-radius: 12px;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 0 3px #3b4d8a, 0 0 0 6px #131a36;
+      cursor: pointer;
+    }
+
+    /* Rarity Gradients */
+    .rarity-COMMON { background: linear-gradient(135deg, #475569, #334155); border-color: #94a3b8; }
+    .rarity-RARE { background: linear-gradient(135deg, #0284c7, #1e3a8a); border-color: #38bdf8; }
+    .rarity-SUPER_RARE { background: linear-gradient(135deg, #7c3aed, #4c1d95); border-color: #c084fc; }
+    .rarity-EPIC { background: linear-gradient(135deg, #db2777, #831843); border-color: #f472b6; }
+    .rarity-LEGEND { background: linear-gradient(135deg, #d97706, #78350f); border-color: #fbbf24; }
+    .rarity-SUPER_LEGEND { background: linear-gradient(135deg, #dc2626, #9333ea, #eab308); border-color: #fef08a; }
+  </style>
+</head>
+<body class="select-none">
+
+  <!-- ==================== TOP HUD BAR ==================== -->
+  <header class="w-full px-2 sm:px-4 pt-2 pb-1.5 flex flex-wrap items-center justify-between gap-2 z-20 shrink-0">
+    <!-- Logo & Stage Info -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="flex items-center gap-2 bg-slate-900/90 border-2 border-amber-500/80 rounded-xl px-2.5 py-1 shadow-lg">
+        <span class="text-xl sm:text-2xl">💣</span>
+        <div class="leading-tight">
+          <div class="text-xs sm:text-sm font-extrabold tracking-wider text-amber-400">BOMBCRYPTO</div>
+          <div class="text-[10px] sm:text-xs font-bold text-cyan-300 tracking-widest -mt-0.5">PLUS • © Bế Minh Đức</div>
+        </div>
+      </div>
+
+      <!-- Stage & Chest Progress -->
+      <div class="arcade-panel rounded-xl px-2.5 sm:px-3.5 py-1 flex items-center gap-2 sm:gap-3">
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs sm:text-sm font-bold text-emerald-400">MÀN <span id="hudStage">1</span></span>
+            <span class="text-[10px] sm:text-xs text-slate-300 bg-slate-800/90 px-1.5 py-0.5 rounded-md border border-slate-600">
+              Rương: <span id="hudChests" class="text-amber-300 font-bold">0/0</span>
+            </span>
+          </div>
+          <div class="w-24 sm:w-32 h-1.5 bg-slate-950 rounded-full overflow-hidden mt-1 border border-slate-700">
+            <div id="hudStageBar" class="h-full bg-gradient-to-r from-emerald-500 to-lime-400 transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+        <button onclick="game.newMapConfirm()" title="Tạo lại bản đồ màn hiện tại" class="arcade-btn bg-slate-700 hover:bg-slate-600 border-slate-900 text-xs px-2 py-1.5 rounded-lg font-bold text-slate-200">
+          🔄
+        </button>
+      </div>
+    </div>
+
+    <!-- Center/Right Resources & Quick Controls -->
+    <div class="flex items-center gap-1.5 sm:gap-2.5 ml-auto">
+      <!-- BCOIN Balance -->
+      <div id="bcoinHudBox" class="arcade-panel gold-trim rounded-xl px-2.5 sm:px-3.5 py-1 flex items-center gap-2">
+        <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-yellow-300 via-amber-500 to-orange-600 border-2 border-yellow-100 flex items-center justify-center font-extrabold text-slate-950 text-xs sm:text-sm shadow">
+          B
+        </div>
+        <div class="leading-tight">
+          <div class="text-[9px] sm:text-[10px] uppercase tracking-wider text-amber-200/80 font-bold">BCOIN</div>
+          <div id="hudBcoin" class="text-sm sm:text-base font-extrabold text-amber-300 tabular-nums">0.00</div>
+        </div>
+      </div>
+
+      <!-- Active Heroes Count -->
+      <button onclick="ui.openModal('heroesModal')" class="arcade-panel hover:border-cyan-400 transition rounded-xl px-2.5 py-1 flex items-center gap-1.5 cursor-pointer">
+        <span class="text-base sm:text-lg">🦸</span>
+        <div class="leading-tight text-left">
+          <div class="text-[9px] sm:text-[10px] text-cyan-200/80 font-bold">RA TRẬN</div>
+          <div class="text-xs sm:text-sm font-extrabold text-white"><span id="hudWorking">0</span><span class="text-slate-400">/15</span></div>
+        </div>
+      </button>
+
+      <!-- Speed x1 / x2 -->
+      <button id="btnSpeed" onclick="game.toggleSpeed()" class="arcade-btn bg-indigo-600 border-indigo-900 text-white rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-extrabold flex items-center gap-1">
+        <span>⚡</span><span id="hudSpeed">x1</span>
+      </button>
+
+      <!-- Sound Toggle -->
+      <button id="btnSound" onclick="sound.toggle()" class="arcade-btn bg-slate-700 border-slate-900 text-white rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-bold" title="Bật/Tắt Âm Thanh">
+        🔊
+      </button>
+
+      <!-- Settings & Guide -->
+      <button onclick="ui.openModal('settingsModal')" class="arcade-btn bg-slate-700 border-slate-900 text-white rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-bold" title="Hệ Thống & Hướng Dẫn">
+        ⚙️
+      </button>
+
+      <!-- Quick Export APK -->
+      <button onclick="game.downloadApkPackageConfig()" class="arcade-btn bg-emerald-600 border-emerald-900 text-white rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-extrabold flex items-center gap-1" title="Xuất cấu hình & hướng dẫn build APK Android">
+        <span>📱</span><span class="hidden sm:inline">APK</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== MANUAL OVERRIDE BANNER (Dynamic) ==================== -->
+  <div id="manualBanner" class="hidden w-full px-3 py-1 bg-gradient-to-r from-amber-600/90 via-orange-500/95 to-amber-600/90 border-y border-yellow-200 text-slate-950 text-xs sm:text-sm font-extrabold flex items-center justify-between gap-2 z-20 shrink-0 shadow-md">
+    <div class="flex items-center gap-2 truncate">
+      <span class="animate-bounce">🎮</span>
+      <span id="manualHeroLabel" class="truncate">Đang điều khiển thủ công: Hero</span>
+      <span class="hidden md:inline text-xs font-bold bg-black/20 text-white px-2 py-0.5 rounded">WASD / Mũi tên: Di chuyển • SPACE: Đặt bom • ESC: Thoát</span>
+    </div>
+    <button onclick="game.deselectHero()" class="bg-slate-900 text-amber-300 hover:bg-slate-800 px-2.5 py-0.5 rounded-lg text-xs font-bold shrink-0 cursor-pointer">
+      ✕ Trả về AI
+    </button>
+  </div>
+
+  <!-- ==================== MAIN GAME ARENA (CANVAS) ==================== -->
+  <main id="arenaContainer" class="flex-1 w-full relative flex items-center justify-center p-2 sm:p-3 overflow-hidden">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Floating Toast Container -->
+    <div id="toastContainer" class="pointer-events-none fixed top-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 z-50 w-full max-w-md px-3"></div>
+
+    <!-- Mobile / Touch D-Pad & Bomb Controls (Hiện khi chọn Hero điều khiển thủ công) -->
+    <div id="touchControls" class="hidden fixed bottom-20 inset-x-3 flex items-end justify-between pointer-events-none z-30 md:opacity-80">
+      <!-- D-Pad -->
+      <div class="pointer-events-auto grid grid-cols-3 gap-1.5 bg-slate-900/75 p-2 rounded-2xl border border-slate-600/80 backdrop-blur-sm">
+        <div></div>
+        <button data-dir="UP" class="dpad-btn w-11 h-11 bg-slate-700/90 active:bg-amber-500 rounded-xl flex items-center justify-center text-lg font-bold shadow">▲</button>
+        <div></div>
+        <button data-dir="LEFT" class="dpad-btn w-11 h-11 bg-slate-700/90 active:bg-amber-500 rounded-xl flex items-center justify-center text-lg font-bold shadow">◀</button>
+        <button data-dir="DOWN" class="dpad-btn w-11 h-11 bg-slate-700/90 active:bg-amber-500 rounded-xl flex items-center justify-center text-lg font-bold shadow">▼</button>
+        <button data-dir="RIGHT" class="dpad-btn w-11 h-11 bg-slate-700/90 active:bg-amber-500 rounded-xl flex items-center justify-center text-lg font-bold shadow">▶</button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pointer-events-auto flex flex-col gap-2">
+        <button onclick="game.manualPlaceBomb()" class="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-rose-700 border-4 border-amber-300 shadow-xl flex flex-col items-center justify-center active:scale-95">
+          <span class="text-2xl leading-none">💣</span>
+          <span class="text-[10px] font-extrabold">ĐẶT BOM</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== BOTTOM ACTION DOCK ==================== -->
+  <footer class="w-full px-2 sm:px-4 pb-2.5 pt-1 z-20 shrink-0">
+    <div class="max-w-4xl mx-auto grid grid-cols-7 gap-1.5 sm:gap-2">
+      <!-- 1. Heroes Roster -->
+      <button onclick="ui.openModal('heroesModal')" class="arcade-btn bg-gradient-to-b from-sky-500 to-blue-700 border-blue-950 rounded-xl py-1.5 sm:py-2 px-1 flex flex-col items-center justify-center relative">
+        <span id="badgeHeroesTotal" class="absolute -top-1.5 -right-1 bg-amber-400 text-slate-950 text-[10px] font-extrabold px-1.5 rounded-full border border-slate-900">0</span>
+        <span class="text-lg sm:text-xl leading-none">🦸</span>
+        <span class="text-[10px] sm:text-xs font-extrabold mt-0.5 truncate w-full text-center">Anh Hùng</span>
+      </button>
+
+      <!-- 2. Summon / Gacha -->
+      <button onclick="ui.openModal('gachaModal')" class="arcade-btn bg-gradient-to-b from-amber-400 to-orange-600 border-orange-950 text-slate-950 rounded-xl py-1.5 sm:py-2 px-1 flex flex-col items-center justify-center">
+        <span class="text-lg sm:text-xl leading-none">🎁</span>
+        <span class="text-[10px] sm:text-xs font-extrabold mt-0.5 truncate w-full text-center">Triệu Hồi</span>
+      </button>
+
+      <!-- 3. Houses -->
+      <button onclick="ui.openModal('houseModal')" class="arcade-btn bg-gradient-to-b from-emerald-500 to-teal-700 border-teal-950 rounded-xl py-1.5 sm:py-2 px-1 flex flex-col items-center justify-center">
+        <span class="text-lg sm:text-xl leading-none">🏠</span>
+        <span class="text-[10px] sm:text-xs font-extrabold mt-0.5 truncate w-full text-center">Nhà Ở</span>
+      </button>
+
+      <!-- 4. Upgrade & Fuse -->
+      <button onclick="ui.openModal('upgradeModal')" class="arcade-btn bg-gradient-to-b from-purple-500 to-indigo-700 border-indigo-950 rounded-xl py-1.5 sm:py-2 px-1 flex flex-col items-center justify-center">
+        <span class="text-lg sm:text-xl leading-none">⚒️</span>
+        <span class="text-[10px] sm:text-xs font-extrabold mt-0.5 truncate w-full text-center">Nâng Cấp</span>
+      </button>
+
+      <!-- 5. BCOIN Exchange Market -->
+      <button onclick="ui.openModal('marketModal')" class="arcade-btn bg-gradient-to-b from-cyan-500 to-teal-700 border-teal-950 rounded-xl py-1.5 sm:py-2 px-1 flex flex-col items-center justify-center">
+        <span class="text-lg sm:text-xl leading-none">💱</span>
+        <span class="text-[10px] sm:text-xs font-extrabold mt-0.5 truncate w-full text-center">Sàn BCOIN</span>
+      </button>
+
+      <!-- 6. Mega Bomb Skill -->
+      <button id="btnMegaBomb" onclick="game.triggerMegaBomb()" class="arcade-btn bg-gradient-to-b from-rose-500 to-red-700 border-red-950 rounded-xl py-1.5 sm:py-2 px-1 flex flex-col items-center justify-center relative overflow-hidden">
+        <div id="megaBombOverlay" class="absolute inset-0 bg-slate-950/75 flex items-center justify-center text-xs font-extrabold text-amber-300 hidden">12s</div>
+        <span class="text-lg sm:text-xl leading-none">💥</span>
+        <span class="text-[10px] sm:text-xs font-extrabold mt-0.5 truncate w-full text-center">Siêu Bom</span>
+      </button>
+
+      <!-- 7. Summon Bomb by BCOIN -->
+      <button id="btnSummonBomb" onclick="game.summonBombWithBcoin()" class="arcade-btn bg-gradient-to-b from-fuchsia-500 to-purple-800 border-purple-950 rounded-xl py-1.5 sm:py-2 px-1 flex flex-col items-center justify-center relative overflow-hidden">
+        <span class="text-lg sm:text-xl leading-none">🧨</span>
+        <span class="text-[10px] sm:text-xs font-extrabold mt-0.5 truncate w-full text-center">Gọi Bom</span>
+        <span class="text-[9px] font-bold text-amber-200 leading-none">15 BCOIN</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- ==================== MODALS ==================== -->
+  <div id="modalBackdrop" onclick="if(event.target===this) ui.closeAllModals()" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-40 flex items-center justify-center p-2 sm:p-4">
+
+    <!-- 1. MODAL QUẢN LÝ ANH HÙNG (HEROES) -->
+    <div id="heroesModal" class="hidden arcade-panel gold-trim rounded-2xl w-full max-w-4xl max-h-[88dvh] flex flex-col overflow-hidden animate-pop-in">
+      <div class="p-3 sm:p-4 border-b border-slate-700 flex flex-wrap items-center justify-between gap-2 bg-slate-900/60">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🦸</span>
+          <div>
+            <h2 class="text-base sm:text-lg font-extrabold text-amber-400">ĐỘI HÌNH BOMBER HEROES</h2>
+            <p class="text-xs text-slate-300">Ra trận: <span id="modalWorkCount" class="text-emerald-400 font-bold">0/15</span> • Trong Nhà: <span id="modalHomeCount" class="text-cyan-400 font-bold">0/2</span></p>
+          </div>
+        </div>
+        <button onclick="ui.closeAllModals()" class="arcade-btn bg-rose-600 border-rose-900 px-3 py-1 rounded-xl font-bold text-sm">✕ Đóng</button>
+      </div>
+
+      <!-- Bulk Controls & Filters -->
+      <div class="px-3 sm:px-4 py-2.5 bg-slate-900/40 border-b border-slate-700/80 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button onclick="game.allHeroesWork()" class="arcade-btn bg-emerald-600 border-emerald-900 text-xs font-bold px-2.5 py-1.5 rounded-lg">⚔️ Tất Cả Đi Làm</button>
+          <button onclick="game.allHeroesRest()" class="arcade-btn bg-sky-600 border-sky-900 text-xs font-bold px-2.5 py-1.5 rounded-lg">💤 Tất Cả Nghỉ</button>
+          <button onclick="game.fillHomeSlots()" class="arcade-btn bg-amber-500 border-amber-800 text-slate-950 text-xs font-extrabold px-2.5 py-1.5 rounded-lg">🏠 Lấp Đầy Nhà</button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <label class="flex items-center gap-1.5 text-xs text-slate-200 cursor-pointer">
+            <input id="chkAutoRest" type="checkbox" onchange="game.toggleAutoRest(this.checked)" class="w-4 h-4 accent-amber-400 rounded" />
+            <span>Tự nghỉ khi cạn lực</span>
+          </label>
+          <select id="heroFilterRarity" onchange="ui.renderHeroesModal()" class="bg-slate-800 border border-slate-600 rounded-lg text-xs px-2 py-1 text-white font-semibold">
+            <option value="ALL">Tất cả bậc</option>
+            <option value="SUPER_LEGEND">Siêu Huyền Thoại</option>
+            <option value="LEGEND">Huyền Thoại</option>
+            <option value="EPIC">Sử Thi</option>
+            <option value="SUPER_RARE">Siêu Hiếm</option>
+            <option value="RARE">Hiếm</option>
+            <option value="COMMON">Thường</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Hero Cards List -->
+      <div id="heroesListContainer" class="p-3 sm:p-4 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3 flex-1"></div>
+    </div>
+
+    <!-- 2. MODAL CỬA HÀNG TRIỆU HỒI (GACHA) -->
+    <div id="gachaModal" class="hidden arcade-panel gold-trim rounded-2xl w-full max-w-2xl max-h-[88dvh] flex flex-col overflow-hidden animate-pop-in">
+      <div class="p-3 sm:p-4 border-b border-slate-700 flex items-center justify-between bg-slate-900/60">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🎁</span>
+          <div>
+            <h2 class="text-base sm:text-lg font-extrabold text-amber-400">TRIỆU HỒI BOMBER HERO</h2>
+            <p class="text-xs text-slate-300">Chiêu mộ chiến binh săn kho báu huyền thoại</p>
+          </div>
+        </div>
+        <button onclick="ui.closeAllModals()" class="arcade-btn bg-rose-600 border-rose-900 px-3 py-1 rounded-xl font-bold text-sm">✕ Đóng</button>
+      </div>
+
+      <div class="p-4 sm:p-6 overflow-y-auto flex flex-col items-center text-center space-y-5">
+        <div class="relative w-36 h-36 flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-500/30 via-yellow-300/20 to-purple-500/30 animate-spin-slow blur-md"></div>
+          <div class="relative w-28 h-28 rounded-2xl bg-gradient-to-b from-amber-400 to-orange-700 border-4 border-yellow-200 shadow-2xl flex flex-col items-center justify-center">
+            <span class="text-5xl drop-shadow">🧰</span>
+            <span class="text-[10px] font-extrabold bg-slate-950/80 text-amber-300 px-2 py-0.5 rounded-full mt-1">HỘP ANH HÙNG</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
+          <button onclick="game.summonHeroes(1)" class="arcade-btn bg-gradient-to-b from-sky-400 to-blue-600 border-blue-950 rounded-2xl p-3 flex flex-col items-center">
+            <span class="text-sm font-extrabold text-white">TRIỆU HỒI x1</span>
+            <span class="text-xs font-bold text-yellow-200 mt-1 bg-black/25 px-3 py-0.5 rounded-full">💰 100 BCOIN</span>
+          </button>
+
+          <button onclick="game.summonHeroes(5)" class="arcade-btn bg-gradient-to-b from-amber-400 to-orange-600 border-orange-950 text-slate-950 rounded-2xl p-3 flex flex-col items-center relative">
+            <span class="absolute -top-2 right-2 bg-rose-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow">GIẢM 10%</span>
+            <span class="text-sm font-extrabold">TRIỆU HỒI x5</span>
+            <span class="text-xs font-extrabold text-slate-900 mt-1 bg-white/40 px-3 py-0.5 rounded-full">💰 450 BCOIN</span>
+          </button>
+        </div>
+
+        <div class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-3 text-left">
+          <div class="text-xs font-bold text-amber-300 mb-2 uppercase tracking-wider">📊 Tỉ Lệ Xuất Hiện Độ Hiếm</div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+            <div class="flex justify-between bg-slate-800/80 px-2.5 py-1.5 rounded-lg border-l-4 border-slate-400">
+              <span>Thường (Common)</span><span class="font-bold text-slate-300">48.0%</span>
+            </div>
+            <div class="flex justify-between bg-slate-800/80 px-2.5 py-1.5 rounded-lg border-l-4 border-sky-400">
+              <span>Hiếm (Rare)</span><span class="font-bold text-sky-300">28.0%</span>
+            </div>
+            <div class="flex justify-between bg-slate-800/80 px-2.5 py-1.5 rounded-lg border-l-4 border-purple-400">
+              <span>Siêu Hiếm (SR)</span><span class="font-bold text-purple-300">14.0%</span>
+            </div>
+            <div class="flex justify-between bg-slate-800/80 px-2.5 py-1.5 rounded-lg border-l-4 border-pink-400">
+              <span>Sử Thi (Epic)</span><span class="font-bold text-pink-300">6.5%</span>
+            </div>
+            <div class="flex justify-between bg-slate-800/80 px-2.5 py-1.5 rounded-lg border-l-4 border-amber-400">
+              <span>Huyền Thoại</span><span class="font-bold text-amber-300">2.8%</span>
+            </div>
+            <div class="flex justify-between bg-slate-800/80 px-2.5 py-1.5 rounded-lg border-l-4 border-red-500">
+              <span>Siêu Huyền Thoại</span><span class="font-bold text-rose-300">0.7%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. MODAL NHÀ HỒI PHỤC (HOUSES) -->
+    <div id="houseModal" class="hidden arcade-panel gold-trim rounded-2xl w-full max-w-2xl max-h-[88dvh] flex flex-col overflow-hidden animate-pop-in">
+      <div class="p-3 sm:p-4 border-b border-slate-700 flex items-center justify-between bg-slate-900/60">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🏠</span>
+          <div>
+            <h2 class="text-base sm:text-lg font-extrabold text-emerald-400">NHÀ HỒI PHỤC THỂ LỰC</h2>
+            <p class="text-xs text-slate-300">Hồi Stamina nhanh gấp 2.0x - 5.0x cho Hero nghỉ ngơi</p>
+          </div>
+        </div>
+        <button onclick="ui.closeAllModals()" class="arcade-btn bg-rose-600 border-rose-900 px-3 py-1 rounded-xl font-bold text-sm">✕ Đóng</button>
+      </div>
+
+      <div id="houseModalBody" class="p-4 overflow-y-auto space-y-3"></div>
+    </div>
+
+    <!-- 4. MODAL NÂNG CẤP & DUNG HỢP (UPGRADE / FUSE) -->
+    <div id="upgradeModal" class="hidden arcade-panel gold-trim rounded-2xl w-full max-w-3xl max-h-[88dvh] flex flex-col overflow-hidden animate-pop-in">
+      <div class="p-3 sm:p-4 border-b border-slate-700 flex items-center justify-between bg-slate-900/60">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">⚒️</span>
+          <div>
+            <h2 class="text-base sm:text-lg font-extrabold text-purple-300">LÒ RÈN & DUNG HỢP ANH HÙNG</h2>
+            <p class="text-xs text-slate-300">Tăng cấp sức mạnh hoặc dung hợp Hero cùng bậc</p>
+          </div>
+        </div>
+        <button onclick="ui.closeAllModals()" class="arcade-btn bg-rose-600 border-rose-900 px-3 py-1 rounded-xl font-bold text-sm">✕ Đóng</button>
+      </div>
+
+      <div class="flex border-b border-slate-700 bg-slate-900/40 px-4 pt-2 gap-2">
+        <button id="tabBtnLevelUp" onclick="ui.switchUpgradeTab('LEVEL')" class="px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-purple-600 text-white border-t border-x border-purple-400">
+          ⬆️ Cường Hóa BCOIN
+        </button>
+        <button id="tabBtnFuse" onclick="ui.switchUpgradeTab('FUSE')" class="px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-slate-800 text-slate-400 hover:text-white">
+          🧬 Dung Hợp Hero
+        </button>
+      </div>
+
+      <div id="upgradeModalBody" class="p-3 sm:p-4 overflow-y-auto flex-1"></div>
+    </div>
+
+    <!-- 5. MODAL CHỢ MUA BÁN & TRAO ĐỔI BCOIN -->
+    <div id="marketModal" class="hidden arcade-panel gold-trim rounded-2xl w-full max-w-3xl max-h-[88dvh] flex flex-col overflow-hidden animate-pop-in">
+      <div class="p-3 sm:p-4 border-b border-slate-700 flex flex-wrap items-center justify-between gap-2 bg-slate-900/60">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">💱</span>
+          <div>
+            <h2 class="text-base sm:text-lg font-extrabold text-amber-400">SÀN MUA BÁN & TRAO ĐỔI BCOIN</h2>
+            <p class="text-xs text-slate-300">
+              Số dư: <span id="marketBcoinBal" class="text-amber-300 font-extrabold">0.00 BCOIN</span> •
+              Ngân quỹ: <span id="marketCashBal" class="text-emerald-300 font-extrabold">0đ</span> •
+              Giá thị trường: <span id="marketPriceTag" class="text-cyan-300 font-extrabold">120,000đ / 100 BCOIN</span>
+            </p>
+          </div>
+        </div>
+        <button onclick="ui.closeAllModals()" class="arcade-btn bg-rose-600 border-rose-900 px-3 py-1 rounded-xl font-bold text-sm">✕ Đóng</button>
+      </div>
+
+      <div class="flex border-b border-slate-700 bg-slate-900/40 px-4 pt-2 gap-2">
+        <button id="tabMarketBuy" onclick="ui.switchMarketTab('BUY')" class="px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-emerald-600 text-white border-t border-x border-emerald-400">
+          🛒 Mua BCOIN
+        </button>
+        <button id="tabMarketSell" onclick="ui.switchMarketTab('SELL')" class="px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-slate-800 text-slate-400 hover:text-white">
+          💸 Bán BCOIN
+        </button>
+        <button id="tabMarketSwap" onclick="ui.switchMarketTab('SWAP')" class="px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-slate-800 text-slate-400 hover:text-white">
+          🎁 Trao Đổi Vật Phẩm
+        </button>
+      </div>
+
+      <div id="marketModalBody" class="p-3 sm:p-4 overflow-y-auto flex-1 space-y-3"></div>
+    </div>
+
+    <!-- 6. MODAL HỆ THỐNG & HƯỚNG DẪN -->
+    <div id="settingsModal" class="hidden arcade-panel rounded-2xl w-full max-w-lg max-h-[88dvh] flex flex-col overflow-hidden animate-pop-in">
+      <div class="p-3 sm:p-4 border-b border-slate-700 flex items-center justify-between bg-slate-900/60">
+        <h2 class="text-base sm:text-lg font-extrabold text-amber-400">⚙️ HỆ THỐNG & HƯỚNG DẪN</h2>
+        <button onclick="ui.closeAllModals()" class="arcade-btn bg-rose-600 border-rose-900 px-3 py-1 rounded-xl font-bold text-sm">✕ Đóng</button>
+      </div>
+
+      <div class="p-4 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-200">
+        <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-3 space-y-1.5">
+          <div class="font-extrabold text-amber-300">📖 Mẹo Chơi BombCrypto Plus:</div>
+          <ul class="list-disc pl-4 space-y-1 text-slate-300">
+            <li><strong class="text-white">Tự Động Săn Kho Báu:</strong> Các Hero ở trạng thái <em>Ra trận</em> sẽ tự tìm đường, đặt bom phá rương và thông minh né vùng cảnh báo đỏ.</li>
+            <li><strong class="text-white">Điều Khiển Thủ Công:</strong> Nhấp chuột / chạm trực tiếp vào một Hero bất kỳ trên bản đồ để tự lái bằng <strong>WASD / Phím mũi tên</strong> và nhấn <strong>Space</strong> đặt bom.</li>
+            <li><strong class="text-white">Đổi Chủ Đề Từng Màn:</strong> Màn lẻ là <strong>Map Noel</strong> (tuyết đông, đèn nháy, bông tuyết) và màn chẵn là <strong>Map Tết</strong> (nền đỏ vàng, lồng đèn, cánh hoa).</li>
+            <li><strong class="text-white">Lồng Giam (Jail):</strong> Phá vỡ lồng giam trên bản đồ để giải cứu miễn phí một Hero mới!</li>
+          </ul>
+        </div>
+
+        <div class="flex items-center justify-between bg-slate-900/80 border border-slate-700 rounded-xl p-3">
+          <div>
+            <div class="font-bold text-emerald-400">Lưu Trữ Tự Động</div>
+            <div class="text-xs text-slate-400">Tiến trình được tự động lưu vào trình duyệt</div>
+          </div>
+          <button onclick="game.saveData(true)" class="arcade-btn bg-emerald-600 border-emerald-900 px-3 py-1.5 rounded-xl font-bold text-xs">
+            💾 Lưu Ngay
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between bg-rose-950/40 border border-rose-800/70 rounded-xl p-3">
+          <div>
+            <div class="font-bold text-rose-400">Xóa Dữ Liệu Chơi Lại</div>
+            <div class="text-xs text-slate-400">Đặt lại toàn bộ BCOIN, Hero và Màn chơi về ban đầu</div>
+          </div>
+          <button onclick="ui.confirmReset()" class="arcade-btn bg-rose-600 border-rose-950 px-3 py-1.5 rounded-xl font-bold text-xs">
+            🗑️ Reset Game
+          </button>
+        </div>
+
+        <div class="bg-slate-900/85 border border-cyan-500/50 rounded-xl p-3 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <div class="font-extrabold text-cyan-300">📦 Xuất Gói APK (Android) & PC (Windows/macOS/Linux)</div>
+              <div class="text-xs text-slate-400">Tải sẵn cấu hình đóng gói WebView / Capacitor / Electron từ bản game hiện tại</div>
+            </div>
+            <span class="text-[10px] font-extrabold bg-cyan-500/20 text-cyan-200 border border-cyan-400/40 px-2 py-0.5 rounded-full">v1.0</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button onclick="game.downloadApkPackageConfig()" class="arcade-btn bg-emerald-600 border-emerald-900 px-2.5 py-2 rounded-xl font-bold text-xs text-center">
+              📱 Xuất Cấu Hình APK
+            </button>
+            <button onclick="game.downloadPcElectronConfig()" class="arcade-btn bg-indigo-600 border-indigo-950 px-2.5 py-2 rounded-xl font-bold text-xs text-center">
+              💻 Xuất Gói PC (Electron)
+            </button>
+            <button onclick="game.downloadStandaloneHtml()" class="arcade-btn bg-amber-500 border-amber-800 text-slate-950 px-2.5 py-2 rounded-xl font-extrabold text-xs text-center">
+              📄 Tải File HTML Gốc
+            </button>
+          </div>
+
+          <div class="text-[11px] text-slate-300 bg-slate-950/70 border border-slate-800 rounded-lg p-2.5 space-y-1">
+            <div><strong class="text-emerald-300">Build APK nhanh:</strong> Đặt file HTML làm <code class="text-amber-200">www/index.html</code> trong dự án Capacitor rồi chạy <code class="text-amber-200">npx cap open android</code> → <em>Build APK(s)</em>.</div>
+            <div><strong class="text-indigo-300">Build PC nhanh:</strong> Đặt file HTML cùng <code class="text-amber-200">package.json</code> &amp; <code class="text-amber-200">main.js</code> vừa tải rồi chạy <code class="text-amber-200">npm install &amp;&amp; npm run build:pc</code>.</div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/80 border border-amber-500/40 rounded-xl p-3 text-center text-xs text-amber-200 font-bold">
+          © Bản quyền thuộc về <span class="text-white font-extrabold">Bế Minh Đức</span> • BombCrypto Plus Edition
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. MODAL XÁC NHẬN TÙY CHỈNH -->
+    <div id="confirmModal" class="hidden arcade-panel gold-trim rounded-2xl w-full max-w-sm p-5 text-center space-y-4 animate-pop-in z-50">
+      <div id="confirmIcon" class="text-4xl">⚠️</div>
+      <h3 id="confirmTitle" class="text-lg font-extrabold text-amber-400">Xác Nhận</h3>
+      <p id="confirmMessage" class="text-xs sm:text-sm text-slate-200"></p>
+      <div class="flex items-center justify-center gap-3 pt-1">
+        <button onclick="ui.closeConfirm()" class="arcade-btn bg-slate-600 border-slate-800 px-4 py-2 rounded-xl font-bold text-xs sm:text-sm">Hủy Bỏ</button>
+        <button id="confirmYesBtn" class="arcade-btn bg-rose-600 border-rose-900 px-4 py-2 rounded-xl font-bold text-xs sm:text-sm">Đồng Ý</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== GACHA / RESCUE REVEAL OVERLAY ==================== -->
+  <div id="gachaRevealOverlay" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
+    <div class="text-center mb-4">
+      <div id="revealSubtitle" class="text-xs sm:text-sm font-bold tracking-widest text-amber-300 uppercase">CHÚC MỪNG TRIỆU HỒI THÀNH CÔNG!</div>
+      <h2 id="revealTitle" class="text-2xl sm:text-3xl font-extrabold text-white drop-shadow-lg mt-1">ANH HÙNG MỚI GIA NHẬP</h2>
+    </div>
+
+    <div id="revealCardsGrid" class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 max-w-4xl max-h-[65dvh] overflow-y-auto p-2"></div>
+
+    <button onclick="ui.closeRevealOverlay()" class="arcade-btn mt-6 bg-gradient-to-b from-amber-400 to-orange-600 border-orange-950 text-slate-950 font-extrabold px-8 py-3 rounded-2xl text-sm sm:text-base shadow-xl">
+      ✨ TUYỆT VỜI! TIẾP TỤC
+    </button>
+  </div>
+
+  <!-- ==================== JAVASCRIPT GAME ENGINE ==================== -->
+  <script>
+    /**
+     * =========================================================================
+     * 1. WEB AUDIO API RETRO SYNTHESIZER
+     * =========================================================================
+     */
+    class RetroSound {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      toggle() {
+        this.muted = !this.muted;
+        const btn = document.getElementById('btnSound');
+        if (btn) btn.textContent = this.muted ? '🔇' : '🔊';
+        if (!this.muted) {
+          this.init();
+          this.playTone(660, 'square', 0.08, 0.08);
+        }
+      }
+
+      playTone(freq, type = 'square', duration = 0.1, vol = 0.1, slideTo = null) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, now);
+          if (slideTo) {
+            osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), now + duration);
+          }
+          gain.gain.setValueAtTime(vol, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + duration);
+        } catch (e) {}
+      }
+
+      playBombPlace() {
+        this.playTone(220, 'triangle', 0.12, 0.12, 110);
+      }
+
+      playExplosion() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          const bufferSize = this.ctx.sampleRate * 0.28;
+          const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 1.8);
+          }
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = buffer;
+
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(480, now);
+          filter.frequency.exponentialRampToValueAtTime(75, now + 0.28);
+
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.24, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+          noise.start(now);
+        } catch (e) {}
+      }
+
+      playCoin() {
+        this.playTone(987.77, 'sine', 0.07, 0.12);
+        setTimeout(() => this.playTone(1318.51, 'sine', 0.14, 0.12), 55);
+      }
+
+      playStageClear() {
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((n, idx) => {
+          setTimeout(() => this.playTone(n, 'triangle', 0.18, 0.14), idx * 95);
+        });
+      }
+
+      playGachaOpen() {
+        const notes = [392, 493.88, 587.33, 783.99, 987.77, 1174.66];
+        notes.forEach((n, idx) => {
+          setTimeout(() => this.playTone(n, 'square', 0.16, 0.11), idx * 75);
+        });
+      }
+
+      playClick() {
+        this.playTone(540, 'triangle', 0.05, 0.06);
+      }
+    }
+
+    const sound = new RetroSound();
+
+    /**
+     * =========================================================================
+     * 2. CẤU HÌNH HẰNG SỐ & DỮ LIỆU GAME
+     * =========================================================================
+     */
+    const GRID_COLS = 15;
+    const GRID_ROWS = 11;
+    const MAX_WORK_HEROES = 15;
+    const SAVE_KEY = 'bombcrypto_plus_save_v1';
+
+    const TILE = {
+      EMPTY: 0,
+      WALL: 1,
+      CRATE: 2,
+      CHEST_WOOD: 3,
+      CHEST_SILVER: 4,
+      CHEST_GOLD: 5,
+      CHEST_DIAMOND: 6,
+      JAIL: 7
+    };
+
+    const RARITIES = {
+      COMMON: {
+        id: 'COMMON',
+        name: 'Thường',
+        short: 'Common',
+        weight: 48.0,
+        color: '#94a3b8',
+        armor: '#64748b',
+        visor: '#38bdf8',
+        powerRange: [1, 2],
+        speedRange: [2, 3],
+        staminaRange: [55, 75],
+        bombRange: [1, 1],
+        rangeRange: [1, 1],
+        skillCount: 0,
+        cape: false,
+        aura: false
+      },
+      RARE: {
+        id: 'RARE',
+        name: 'Hiếm',
+        short: 'Rare',
+        weight: 28.0,
+        color: '#38bdf8',
+        armor: '#0284c7',
+        visor: '#fef08a',
+        powerRange: [2, 4],
+        speedRange: [3, 4],
+        staminaRange: [80, 110],
+        bombRange: [1, 2],
+        rangeRange: [1, 2],
+        skillCount: 1,
+        cape: true,
+        aura: false
+      },
+      SUPER_RARE: {
+        id: 'SUPER_RARE',
+        name: 'Siêu Hiếm',
+        short: 'Super Rare',
+        weight: 14.0,
+        color: '#c084fc',
+        armor: '#7c3aed',
+        visor: '#67e8f9',
+        powerRange: [4, 6],
+        speedRange: [4, 5],
+        staminaRange: [115, 150],
+        bombRange: [2, 3],
+        rangeRange: [2, 2],
+        skillCount: 1,
+        cape: true,
+        aura: false
+      },
+      EPIC: {
+        id: 'EPIC',
+        name: 'Sử Thi',
+        short: 'Epic',
+        weight: 6.5,
+        color: '#f472b6',
+        armor: '#db2777',
+        visor: '#fde047',
+        powerRange: [6, 9],
+        speedRange: [5, 6],
+        staminaRange: [155, 200],
+        bombRange: [2, 3],
+        rangeRange: [2, 3],
+        skillCount: 2,
+        cape: true,
+        aura: true
+      },
+      LEGEND: {
+        id: 'LEGEND',
+        name: 'Huyền Thoại',
+        short: 'Legend',
+        weight: 2.8,
+        color: '#fbbf24',
+        armor: '#d97706',
+        visor: '#ef4444',
+        powerRange: [9, 13],
+        speedRange: [6, 8],
+        staminaRange: [210, 265],
+        bombRange: [3, 4],
+        rangeRange: [3, 4],
+        skillCount: 3,
+        cape: true,
+        aura: true
+      },
+      SUPER_LEGEND: {
+        id: 'SUPER_LEGEND',
+        name: 'Siêu Huyền Thoại',
+        short: 'S.Legend',
+        weight: 0.7,
+        color: '#fef08a',
+        armor: '#dc2626',
+        visor: '#a855f7',
+        powerRange: [14, 19],
+        speedRange: [8, 10],
+        staminaRange: [280, 350],
+        bombRange: [4, 5],
+        rangeRange: [4, 5],
+        skillCount: 4,
+        cape: true,
+        aura: true
+      }
+    };
+
+    const RARITY_ORDER = ['COMMON', 'RARE', 'SUPER_RARE', 'EPIC', 'LEGEND', 'SUPER_LEGEND'];
+
+    const SKILLS = {
+      PIERCE: { id: 'PIERCE', name: 'Xuyên Tường', icon: '☄️', desc: 'Tia nổ xuyên qua rương và thùng gỗ' },
+      FAST_CHARGE: { id: 'FAST_CHARGE', name: 'Hồi Lực Nhanh', icon: '🔋', desc: '+50% tốc độ hồi Stamina' },
+      CHAIN_BLAST: { id: 'CHAIN_BLAST', name: 'Nổ Lan Chí Mạng', icon: '🔥', desc: '35% tỉ lệ gây x1.5 sát thương nổ' },
+      SWIFT_STEP: { id: 'SWIFT_STEP', name: 'Tăng Tốc', icon: '👟', desc: '+22% tốc độ chạy thực tế' },
+      GOLD_HUNTER: { id: 'GOLD_HUNTER', name: 'Thợ Săn Kho Báu', icon: '👑', desc: '+25% BCOIN khi phá vỡ rương' }
+    };
+
+    const HOUSES = [
+      { level: 0, name: 'Lều Cắm Trại (Mặc định)', slots: 2, mult: 2.0, cost: 0, icon: '⛺', desc: 'Khu nghỉ dã chiến cơ bản cho 2 Hero.' },
+      { level: 1, name: 'Tiny House (Nhà Nhỏ)', slots: 4, mult: 2.5, cost: 200, icon: '🛖', desc: 'Ngôi nhà gỗ ấm cúng, hồi Stamina nhanh gấp 2.5 lần.' },
+      { level: 2, name: 'Mini House (Nhà Vừa)', slots: 7, mult: 3.2, cost: 600, icon: '🏡', desc: 'Biệt thự mini sân vườn, sức chứa 7 Hero hồi lực.' },
+      { level: 3, name: 'Lux House (Biệt Thự)', slots: 11, mult: 4.0, cost: 1500, icon: '🏰', desc: 'Dinh thự sang trọng giúp đội hình hồi phục thần tốc.' },
+      { level: 4, name: 'Penthouse Hoàng Kim', slots: 15, mult: 5.0, cost: 3500, icon: '👑', desc: 'Đỉnh cao xa hoa! Toàn bộ 15 Hero hồi lực siêu tốc x5.0.' }
+    ];
+
+    const HERO_NAMES = [
+      'Santa Noel', 'Tuần Lộc Đỏ', 'Bông Tuyết', 'Yêu Tinh Quà', 'Đêm Đông',
+      'Kẹo Gậy', 'Thông Xanh', 'Sao Băng', 'Gấu Bắc Cực', 'Chuông Vàng',
+      'Hạt Dẻ', 'Lò Sưởi Ấm', 'Tuyết Trắng', 'Vòng Nguyệt', 'Linh Hồn Đông',
+      'Đoàn Xe Tuần Lộc', 'Băng Giá', 'Hộp Quà Đỏ', 'Mùa Vọng', 'Giáng Sinh Vui'
+    ];
+
+    const HERO_ARCHETYPES = [
+      { id: 'SANTA', label: 'Ông Già Noel', hat: 'SANTA_HAT', weapon: 'GIFT_BAG' },
+      { id: 'REINDEER', label: 'Tuần Lộc', hat: 'ANTLERS', weapon: 'BELL_STAFF' },
+      { id: 'SNOWMAN', label: 'Người Tuyết', hat: 'TOP_HAT', weapon: 'CANDY_CANE' },
+      { id: 'ELF', label: 'Yêu Tinh Noel', hat: 'ELF_CAP', weapon: 'TOY_HAMMER' },
+      { id: 'ANGEL', label: 'Thiên Thần Đông', hat: 'HALO_CROWN', weapon: 'STAR_WAND' },
+      { id: 'TREE', label: 'Thông Noel', hat: 'STAR_TOP', weapon: 'ORNAMENT_ORB' },
+      { id: 'GINGERBREAD', label: 'Bánh Gừng Noel', hat: 'COOKIE_FROST', weapon: 'SUGAR_STICK' },
+      { id: 'POLAR_BEAR', label: 'Gấu Tuyết Noel', hat: 'WINTER_EARMUFFS', weapon: 'ICE_BELL' }
+    ];
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function pickRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    /**
+     * =========================================================================
+     * 3. LỚP ĐIỀU KHIỂN GAME CHÍNH
+     * =========================================================================
+     */
+    class BombCryptoGame {
+      constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+
+        this.bcoin = 350;
+        this.cashBalance = 500000;
+        this.bcoinRate = 1200;
+        this.stage = 1;
+        this.houseLevel = 0;
+        this.speedMult = 1;
+        this.autoRest = false;
+        this.megaBombCd = 0;
+        this.megaBombMaxCd = 12;
+
+        this.heroes = [];
+        this.bombs = [];
+        this.explosions = [];
+        this.chests = [];
+        this.particles = [];
+        this.floatingTexts = [];
+        this.flyingCoins = [];
+
+        this.grid = [];
+        this.tileSize = 40;
+        this.totalStageChests = 0;
+        this.stageClearTransition = 0;
+        this.saveTimer = 0;
+
+        this.selectedHeroId = null;
+        this.keys = {};
+        this.touchDir = null;
+
+        window.game = this;
+
+        this.loadData();
+        if (this.heroes.length === 0) {
+          this.initStarterPack();
+        }
+        this.generateStageMap(this.stage);
+        this.resizeCanvas();
+        this.bindEvents();
+        if (window.ui) {
+          window.ui.updateAllHUD();
+        }
+      }
+
+      initStarterPack() {
+        this.bcoin = 350;
+        this.cashBalance = 500000;
+        this.bcoinRate = 1200;
+        this.stage = 1;
+        this.houseLevel = 0;
+        this.heroes = [
+          this.createHero('RARE', 'Santa Noel Đỏ', 'SANTA'),
+          this.createHero('COMMON', 'Tuần Lộc Mũi Đỏ', 'REINDEER')
+        ];
+        this.heroes.forEach(h => {
+          h.state = 'WORK';
+          this.spawnHeroOnMap(h);
+        });
+        this.saveData();
+      }
+
+      createHero(forcedRarity = null, forcedName = null, forcedArchetype = null) {
+        let rarityKey = forcedRarity;
+        if (!rarityKey) {
+          const roll = Math.random() * 100;
+          let acc = 0;
+          for (const key of RARITY_ORDER) {
+            acc += RARITIES[key].weight;
+            if (roll <= acc) {
+              rarityKey = key;
+              break;
+            }
+          }
+          if (!rarityKey) rarityKey = 'COMMON';
+        }
+
+        const cfg = RARITIES[rarityKey];
+        const archObj = forcedArchetype
+          ? (HERO_ARCHETYPES.find(a => a.id === forcedArchetype) || pickRandom(HERO_ARCHETYPES))
+          : pickRandom(HERO_ARCHETYPES);
+
+        const allSkillKeys = Object.keys(SKILLS);
+        const chosenSkills = [];
+        while (chosenSkills.length < cfg.skillCount && chosenSkills.length < allSkillKeys.length) {
+          const sk = pickRandom(allSkillKeys);
+          if (!chosenSkills.includes(sk)) chosenSkills.push(sk);
+        }
+
+        const maxStamina = randInt(cfg.staminaRange[0], cfg.staminaRange[1]);
+        return {
+          id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          name: forcedName || `${archObj.label} ${pickRandom(HERO_NAMES)} #${randInt(10, 99)}`,
+          archetype: archObj.id,
+          rarity: rarityKey,
+          level: 1,
+          power: randInt(cfg.powerRange[0], cfg.powerRange[1]),
+          speed: randInt(cfg.speedRange[0], cfg.speedRange[1]),
+          maxStamina: maxStamina,
+          stamina: maxStamina,
+          bombNum: randInt(cfg.bombRange[0], cfg.bombRange[1]),
+          range: randInt(cfg.rangeRange[0], cfg.rangeRange[1]),
+          skills: chosenSkills,
+          state: this.getWorkingCount() < MAX_WORK_HEROES ? 'WORK' : 'REST',
+          hueShift: randInt(-20, 20),
+          x: 1.5,
+          y: 1.5,
+          dir: 'DOWN',
+          animTime: Math.random() * 10,
+          stunTimer: 0,
+          aiWait: 0,
+          path: []
+        };
+      }
+
+      spawnHeroOnMap(hero) {
+        const emptyCells = [];
+        for (let r = 1; r < GRID_ROWS - 1; r++) {
+          for (let c = 1; c < GRID_COLS - 1; c++) {
+            if (this.grid[r] && this.grid[r][c] === TILE.EMPTY) {
+              emptyCells.push({ c, r });
+            }
+          }
+        }
+        const spot = emptyCells.length > 0 ? pickRandom(emptyCells) : { c: 1, r: 1 };
+        hero.x = spot.c + 0.5;
+        hero.y = spot.r + 0.5;
+        hero.path = [];
+        hero.stunTimer = 0;
+      }
+
+      generateStageMap(stageNum) {
+        this.grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(TILE.EMPTY));
+        this.chests = [];
+        this.bombs = [];
+        this.explosions = [];
+
+        for (let r = 0; r < GRID_ROWS; r++) {
+          for (let c = 0; c < GRID_COLS; c++) {
+            if (r === 0 || r === GRID_ROWS - 1 || c === 0 || c === GRID_COLS - 1) {
+              this.grid[r][c] = TILE.WALL;
+            } else if (r % 2 === 0 && c % 2 === 0) {
+              this.grid[r][c] = TILE.WALL;
+            }
+          }
+        }
+
+        const candidates = [];
+        const safeSpawns = new Set(['1,1', '1,2', '2,1', '13,1', '13,2', '12,1', '1,9', '2,9', '1,8', '13,9', '12,9', '13,8']);
+        for (let r = 1; r < GRID_ROWS - 1; r++) {
+          for (let c = 1; c < GRID_COLS - 1; c++) {
+            if (this.grid[r][c] === TILE.EMPTY && !safeSpawns.has(`${c},${r}`)) {
+              candidates.push({ c, r });
+            }
+          }
+        }
+
+        for (let i = candidates.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+
+        const hpScale = 1 + (stageNum - 1) * 0.22;
+        const rewardScale = 1 + (stageNum - 1) * 0.16;
+        const chestTargetCount = Math.min(12, 6 + Math.floor(stageNum / 2));
+        let idx = 0;
+
+        if (Math.random() < 0.40 && idx < candidates.length) {
+          const pos = candidates[idx++];
+          this.placeMapEntity(pos.c, pos.r, TILE.JAIL, Math.round(95 * hpScale), 0);
+        }
+
+        for (let i = 0; i < chestTargetCount && idx < candidates.length; i++) {
+          const pos = candidates[idx++];
+          const roll = Math.random() * 100;
+          let type = TILE.CHEST_WOOD;
+          let baseHp = 28;
+          let baseReward = 3.5;
+
+          if (roll < 10 + Math.min(15, stageNum)) {
+            type = TILE.CHEST_DIAMOND;
+            baseHp = 240;
+            baseReward = 55;
+          } else if (roll < 30 + Math.min(15, stageNum)) {
+            type = TILE.CHEST_GOLD;
+            baseHp = 120;
+            baseReward = 22;
+          } else if (roll < 62) {
+            type = TILE.CHEST_SILVER;
+            baseHp = 60;
+            baseReward = 9.5;
+          }
+
+          this.placeMapEntity(
+            pos.c,
+            pos.r,
+            type,
+            Math.round(baseHp * hpScale),
+            Number((baseReward * rewardScale).toFixed(2))
+          );
+        }
+
+        const crateCount = Math.min(22, 12 + stageNum);
+        for (let i = 0; i < crateCount && idx < candidates.length; i++) {
+          const pos = candidates[idx++];
+          this.placeMapEntity(
+            pos.c,
+            pos.r,
+            TILE.CRATE,
+            Math.round(12 * hpScale),
+            Number((0.35 * rewardScale).toFixed(2))
+          );
+        }
+
+        this.totalStageChests = this.chests.filter(ch => ch.type !== TILE.CRATE).length;
+
+        this.heroes.forEach(h => {
+          if (h.state === 'WORK') {
+            this.spawnHeroOnMap(h);
+          }
+        });
+      }
+
+      placeMapEntity(c, r, type, maxHp, reward) {
+        this.grid[r][c] = type;
+        this.chests.push({
+          c,
+          r,
+          type,
+          hp: maxHp,
+          maxHp,
+          reward,
+          shakeTimer: 0,
+          flashTimer: 0
+        });
+      }
+
+      getChestAt(c, r) {
+        return this.chests.find(ch => ch.c === c && ch.r === r);
+      }
+
+      getRemainingChestsCount() {
+        return this.chests.filter(ch => ch.type !== TILE.CRATE).length;
+      }
+
+      newMapConfirm() {
+        ui.openConfirm(
+          '🗺️',
+          'Đổi Bản Đồ Mới?',
+          'Tạo lại bố cục rương và chướng ngại vật cho Màn ' + this.stage + ' hiện tại?',
+          () => {
+            this.generateStageMap(this.stage);
+            ui.showToast('Đã làm mới bản đồ Màn ' + this.stage + '!', 'info');
+          }
+        );
+      }
+
+      saveData(showNotify = false) {
+        try {
+          const payload = {
+            bcoin: Number(this.bcoin.toFixed(2)),
+            cashBalance: Math.round(this.cashBalance),
+            bcoinRate: Math.round(this.bcoinRate),
+            stage: this.stage,
+            houseLevel: this.houseLevel,
+            autoRest: this.autoRest,
+            heroes: this.heroes.map(h => ({
+              id: h.id,
+              name: h.name,
+              archetype: h.archetype,
+              rarity: h.rarity,
+              level: h.level,
+              power: h.power,
+              speed: h.speed,
+              maxStamina: h.maxStamina,
+              stamina: Number(h.stamina.toFixed(2)),
+              bombNum: h.bombNum,
+              range: h.range,
+              skills: h.skills,
+              state: h.state,
+              hueShift: h.hueShift
+            }))
+          };
+          localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+          if (showNotify) ui.showToast('💾 Đã lưu tiến trình thành công!', 'success');
+        } catch (e) {}
+      }
+
+      loadData() {
+        try {
+          const raw = localStorage.getItem(SAVE_KEY);
+          if (!raw) return;
+          const data = JSON.parse(raw);
+          if (typeof data.bcoin === 'number') this.bcoin = data.bcoin;
+          if (typeof data.cashBalance === 'number') this.cashBalance = Math.max(0, data.cashBalance);
+          if (typeof data.bcoinRate === 'number' && data.bcoinRate >= 500) this.bcoinRate = data.bcoinRate;
+          if (typeof data.stage === 'number') this.stage = Math.max(1, data.stage);
+          if (typeof data.houseLevel === 'number') this.houseLevel = Math.min(HOUSES.length - 1, Math.max(0, data.houseLevel));
+          if (typeof data.autoRest === 'boolean') this.autoRest = data.autoRest;
+          if (Array.isArray(data.heroes)) {
+            this.heroes = data.heroes.map((h, idx) => ({
+              ...h,
+              archetype: h.archetype || HERO_ARCHETYPES[idx % HERO_ARCHETYPES.length].id,
+              x: 1.5,
+              y: 1.5,
+              dir: 'DOWN',
+              animTime: Math.random() * 10,
+              stunTimer: 0,
+              aiWait: 0,
+              path: []
+            }));
+          }
+        } catch (e) {}
+      }
+
+      resetAllData() {
+        localStorage.removeItem(SAVE_KEY);
+        this.selectedHeroId = null;
+        this.initStarterPack();
+        this.generateStageMap(1);
+        ui.updateAllHUD();
+        ui.closeAllModals();
+        ui.showToast('🔄 Đã đặt lại toàn bộ dữ liệu game!', 'info');
+      }
+
+      triggerFileDownload(filename, content, mimeType = 'application/json;charset=utf-8') {
+        try {
+          const blob = new Blob([content], { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (err) {
+          ui.showToast('Không thể tải file trên trình duyệt hiện tại!', 'error');
+        }
+      }
+
+      downloadStandaloneHtml() {
+        sound.playClick();
+        const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        this.triggerFileDownload('bombcrypto_plus.html', htmlContent, 'text/html;charset=utf-8');
+        ui.showToast('📄 Đã tải file bombcrypto_plus.html!', 'success');
+      }
+
+      downloadApkPackageConfig() {
+        sound.playClick();
+        const apkSpec = {
+          appName: 'BombCrypto Plus',
+          packageId: 'com.beminhduc.bombcryptoplus',
+          versionName: '1.0.0',
+          versionCode: 1,
+          copyright: 'Bế Minh Đức',
+          orientation: 'landscape',
+          fullscreen: true,
+          webDir: 'www',
+          entryHtml: 'index.html',
+          capacitorConfig: {
+            appId: 'com.beminhduc.bombcryptoplus',
+            appName: 'BombCrypto Plus',
+            webDir: 'www',
+            android: {
+              allowMixedContent: true
+            }
+          },
+          buildSteps: [
+            '1. Tạo thư mục www và lưu file game thành www/index.html',
+            '2. Chạy: npm init -y && npm i @capacitor/core @capacitor/cli @capacitor/android',
+            '3. Chạy: npx cap init "BombCrypto Plus" com.beminhduc.bombcryptoplus --web-dir www',
+            '4. Chạy: npx cap add android && npx cap copy android',
+            '5. Mở Android Studio bằng: npx cap open android -> Build -> Build Bundle(s) / APK(s) -> Build APK(s)'
+          ]
+        };
+        this.triggerFileDownload('capacitor_apk_build_guide.json', JSON.stringify(apkSpec, null, 2));
+        ui.showToast('📱 Đã xuất cấu hình build APK (capacitor_apk_build_guide.json)!', 'success');
+      }
+
+      downloadPcElectronConfig() {
+        sound.playClick();
+        const pcBundle = {
+          copyright: 'Bế Minh Đức',
+          'package.json': {
+            name: 'bombcrypto-plus-pc',
+            version: '1.0.0',
+            description: 'BombCrypto Plus PC Edition - Bản quyền Bế Minh Đức',
+            main: 'main.js',
+            scripts: {
+              start: 'electron .',
+              'build:pc': 'electron-builder --win --mac --linux'
+            },
+            build: {
+              appId: 'com.beminhduc.bombcryptoplus.pc',
+              productName: 'BombCrypto Plus',
+              files: ['bombcrypto_plus.html', 'main.js', 'package.json'],
+              win: { target: ['nsis', 'portable'] },
+              mac: { target: ['dmg'] },
+              linux: { target: ['AppImage'] }
+            },
+            devDependencies: {
+              electron: '^32.0.0',
+              'electron-builder': '^25.0.0'
+            }
+          },
+          'main.js': [
+            "const { app, BrowserWindow } = require('electron');",
+            "const path = require('path');",
+            "",
+            "function createWindow() {",
+            "  const win = new BrowserWindow({",
+            "    width: 1280,",
+            "    height: 800,",
+            "    minWidth: 960,",
+            "    minHeight: 600,",
+            "    title: 'BombCrypto Plus - Bản quyền Bế Minh Đức',",
+            "    autoHideMenuBar: true,",
+            "    webPreferences: { contextIsolation: true }",
+            "  });",
+            "  win.loadFile(path.join(__dirname, 'bombcrypto_plus.html'));",
+            "}",
+            "",
+            "app.whenReady().then(() => {",
+            "  createWindow();",
+            "  app.on('activate', () => {",
+            "    if (BrowserWindow.getAllWindows().length === 0) createWindow();",
+            "  });",
+            "});",
+            "",
+            "app.on('window-all-closed', () => {",
+            "  if (process.platform !== 'darwin') app.quit();",
+            "});"
+          ].join('\n')
+        };
+        this.triggerFileDownload('bombcrypto_plus_pc_electron.json', JSON.stringify(pcBundle, null, 2));
+        ui.showToast('💻 Đã xuất cấu hình đóng gói PC Electron!', 'success');
+      }
+
+      getWorkingCount() {
+        return this.heroes.filter(h => h.state === 'WORK').length;
+      }
+
+      getHomeCount() {
+        return this.heroes.filter(h => h.state === 'HOME').length;
+      }
+
+      getHomeCapacity() {
+        return HOUSES[this.houseLevel].slots;
+      }
+
+      setHeroState(heroId, newState) {
+        const hero = this.heroes.find(h => h.id === heroId);
+        if (!hero || hero.state === newState) return;
+
+        if (newState === 'WORK') {
+          if (this.getWorkingCount() >= MAX_WORK_HEROES) {
+            ui.showToast('Đội hình ra trận đã đạt tối đa 15 Hero!', 'warn');
+            return;
+          }
+          if (hero.stamina < 1) {
+            ui.showToast(`${hero.name} đang cạn thể lực, hãy cho nghỉ ngơi trước!`, 'warn');
+            return;
+          }
+          hero.state = 'WORK';
+          this.spawnHeroOnMap(hero);
+        } else if (newState === 'HOME') {
+          if (this.getHomeCount() >= this.getHomeCapacity()) {
+            ui.showToast(`Nhà hiện tại chỉ chứa tối đa ${this.getHomeCapacity()} Hero!`, 'warn');
+            return;
+          }
+          if (this.selectedHeroId === hero.id) this.deselectHero();
+          hero.state = 'HOME';
+        } else {
+          if (this.selectedHeroId === hero.id) this.deselectHero();
+          hero.state = 'REST';
+        }
+
+        sound.playClick();
+        this.saveData();
+        ui.updateAllHUD();
+        ui.renderHeroesModal();
+      }
+
+      allHeroesWork() {
+        let count = this.getWorkingCount();
+        const sorted = [...this.heroes].sort((a, b) => b.stamina - a.stamina);
+        for (const h of sorted) {
+          if (h.state !== 'WORK' && h.stamina >= 2 && count < MAX_WORK_HEROES) {
+            h.state = 'WORK';
+            this.spawnHeroOnMap(h);
+            count++;
+          }
+        }
+        sound.playClick();
+        this.saveData();
+        ui.updateAllHUD();
+        ui.renderHeroesModal();
+        ui.showToast(`⚔️ Đã đưa ${count} Hero ra trận săn kho báu!`, 'success');
+      }
+
+      allHeroesRest() {
+        this.deselectHero();
+        for (const h of this.heroes) {
+          if (h.state === 'WORK') h.state = 'REST';
+        }
+        sound.playClick();
+        this.saveData();
+        ui.updateAllHUD();
+        ui.renderHeroesModal();
+        ui.showToast('💤 Toàn bộ đội hình đã chuyển sang nghỉ ngơi!', 'info');
+      }
+
+      fillHomeSlots() {
+        const cap = this.getHomeCapacity();
+        let currentHome = this.getHomeCount();
+        if (currentHome >= cap) {
+          ui.showToast('Nhà đã đầy chỗ nghỉ!', 'warn');
+          return;
+        }
+        const candidates = this.heroes
+          .filter(h => h.state !== 'HOME' && h.stamina < h.maxStamina)
+          .sort((a, b) => (a.stamina / a.maxStamina) - (b.stamina / b.maxStamina));
+
+        let added = 0;
+        for (const h of candidates) {
+          if (currentHome >= cap) break;
+          if (this.selectedHeroId === h.id) this.deselectHero();
+          h.state = 'HOME';
+          currentHome++;
+          added++;
+        }
+        sound.playClick();
+        this.saveData();
+        ui.updateAllHUD();
+        ui.renderHeroesModal();
+        ui.showToast(`🏠 Đã đưa ${added} Hero vào Nhà hồi lực siêu tốc!`, 'success');
+      }
+
+      toggleAutoRest(val) {
+        this.autoRest = val;
+        this.saveData();
+      }
+
+      toggleSpeed() {
+        this.speedMult = this.speedMult === 1 ? 2 : 1;
+        const btn = document.getElementById('btnSpeed');
+        const lbl = document.getElementById('hudSpeed');
+        if (lbl) lbl.textContent = `x${this.speedMult}`;
+        if (btn) {
+          if (this.speedMult === 2) {
+            btn.classList.remove('bg-indigo-600', 'border-indigo-900');
+            btn.classList.add('bg-amber-500', 'border-amber-800', 'text-slate-950');
+          } else {
+            btn.classList.add('bg-indigo-600', 'border-indigo-900');
+            btn.classList.remove('bg-amber-500', 'border-amber-800', 'text-slate-950');
+          }
+        }
+        sound.playClick();
+      }
+
+      summonHeroes(count) {
+        const cost = count === 1 ? 100 : 450;
+        if (this.bcoin < cost) {
+          ui.showToast(`Không đủ BCOIN! Cần ${cost} BCOIN để triệu hồi.`, 'error');
+          return;
+        }
+
+        this.bcoin -= cost;
+        const newlySummoned = [];
+        for (let i = 0; i < count; i++) {
+          const hero = this.createHero();
+          if (hero.state === 'WORK') {
+            this.spawnHeroOnMap(hero);
+          }
+          this.heroes.push(hero);
+          newlySummoned.push(hero);
+        }
+
+        sound.playGachaOpen();
+        this.saveData();
+        ui.updateAllHUD();
+        ui.closeAllModals();
+        ui.showRevealOverlay(newlySummoned, 'CHÚC MỪNG TRIỆU HỒI THÀNH CÔNG!', `NHẬN ĐƯỢC ${count} BOMBER HERO`);
+      }
+
+      adjustMarketRate(delta) {
+        this.bcoinRate = Math.min(5000, Math.max(600, this.bcoinRate + delta));
+        sound.playClick();
+        this.saveData();
+        ui.renderMarketModal();
+      }
+
+      buyBcoinWithCash(bcoinAmount, priceVnd) {
+        if (this.cashBalance < priceVnd) {
+          ui.showToast(`Không đủ Ngân quỹ! Cần ${priceVnd.toLocaleString('vi-VN')}đ (hoặc dùng Bán BCOIN để nạp thêm).`, 'error');
+          return;
+        }
+        this.cashBalance -= priceVnd;
+        this.bcoin = Number((this.bcoin + bcoinAmount).toFixed(2));
+        this.bcoinRate = Math.min(5000, this.bcoinRate + 25);
+        sound.playCoin();
+        this.saveData();
+        ui.updateAllHUD();
+        ui.pulseBcoinHud();
+        ui.renderMarketModal();
+        ui.showToast(`🛒 Mua thành công +${bcoinAmount} BCOIN (-${priceVnd.toLocaleString('vi-VN')}đ)!`, 'success');
+      }
+
+      sellBcoinForCash(bcoinAmount) {
+        if (this.bcoin < bcoinAmount) {
+          ui.showToast(`Không đủ BCOIN để bán! Bạn hiện có ${this.bcoin.toFixed(2)} BCOIN.`, 'error');
+          return;
+        }
+        const payoutVnd = Math.round(bcoinAmount * this.bcoinRate * 0.95);
+        this.bcoin = Number((this.bcoin - bcoinAmount).toFixed(2));
+        this.cashBalance += payoutVnd;
+        this.bcoinRate = Math.max(600, this.bcoinRate - 20);
+        sound.playCoin();
+        this.saveData();
+        ui.updateAllHUD();
+        ui.pulseBcoinHud();
+        ui.renderMarketModal();
+        ui.showToast(`💸 Bán ${bcoinAmount} BCOIN nhận +${payoutVnd.toLocaleString('vi-VN')}đ!`, 'success');
+      }
+
+      exchangeBcoinItem(itemType) {
+        if (itemType === 'FULL_STAMINA') {
+          const cost = 45;
+          if (this.bcoin < cost) {
+            ui.showToast(`Cần ${cost} BCOIN để đổi Nước Tăng Lực Noel!`, 'error');
+            return;
+          }
+          this.bcoin = Number((this.bcoin - cost).toFixed(2));
+          for (const h of this.heroes) {
+            h.stamina = h.maxStamina;
+            h.stunTimer = 0;
+          }
+          sound.playStageClear();
+          this.saveData();
+          ui.updateAllHUD();
+          ui.pulseBcoinHud();
+          ui.renderMarketModal();
+          ui.showToast('⚡ Đã hồi đầy 100% thể lực cho toàn bộ Hero!', 'success');
+        } else if (itemType === 'MEGA_READY') {
+          const cost = 30;
+          if (this.bcoin < cost) {
+            ui.showToast(`Cần ${cost} BCOIN để đổi Kích Hoạt Siêu Bom!`, 'error');
+            return;
+          }
+          this.bcoin = Number((this.bcoin - cost).toFixed(2));
+          this.megaBombCd = 0;
+          sound.playCoin();
+          this.saveData();
+          ui.updateAllHUD();
+          ui.pulseBcoinHud();
+          ui.renderMarketModal();
+          ui.showToast('💥 Siêu Bom Noel đã sẵn sàng sử dụng ngay!', 'success');
+        } else if (itemType === 'RARE_GIFT') {
+          const cost = 180;
+          if (this.bcoin < cost) {
+            ui.showToast(`Cần ${cost} BCOIN để đổi Hộp Quà Hiếm Noel!`, 'error');
+            return;
+          }
+          this.bcoin = Number((this.bcoin - cost).toFixed(2));
+          const pool = ['RARE', 'SUPER_RARE', 'EPIC', 'LEGEND'];
+          const weights = [50, 30, 15, 5];
+          const roll = Math.random() * 100;
+          let acc = 0;
+          let chosenRarity = 'RARE';
+          for (let i = 0; i < pool.length; i++) {
+            acc += weights[i];
+            if (roll <= acc) {
+              chosenRarity = pool[i];
+              break;
+            }
+          }
+          const hero = this.createHero(chosenRarity);
+          if (hero.state === 'WORK') this.spawnHeroOnMap(hero);
+          this.heroes.push(hero);
+          sound.playGachaOpen();
+          this.saveData();
+          ui.updateAllHUD();
+          ui.closeAllModals();
+          ui.showRevealOverlay([hero], 'TRAO ĐỔI HỘP QUÀ NOEL THÀNH CÔNG!', `NHẬN ĐƯỢC HERO ${RARITIES[chosenRarity].name.toUpperCase()}`);
+        }
+      }
+
+      upgradeHouse() {
+        if (this.houseLevel >= HOUSES.length - 1) return;
+        const nextHouse = HOUSES[this.houseLevel + 1];
+        if (this.bcoin < nextHouse.cost) {
+          ui.showToast(`Cần ${nextHouse.cost} BCOIN để nâng cấp lên ${nextHouse.name}!`, 'error');
+          return;
+        }
+        this.bcoin -= nextHouse.cost;
+        this.houseLevel++;
+        sound.playStageClear();
+        this.saveData();
+        ui.updateAllHUD();
+        ui.renderHouseModal();
+        ui.showToast(`🏠 Chúc mừng nâng cấp thành công ${nextHouse.name}!`, 'success');
+      }
+
+      levelUpHero(heroId) {
+        const hero = this.heroes.find(h => h.id === heroId);
+        if (!hero) return;
+        const cost = hero.level * 50;
+        if (this.bcoin < cost) {
+          ui.showToast(`Cần ${cost} BCOIN để cường hóa ${hero.name}!`, 'error');
+          return;
+        }
+        this.bcoin -= cost;
+        hero.level += 1;
+        hero.power += 1;
+        hero.maxStamina += 15;
+        hero.stamina = hero.maxStamina;
+        if (hero.level % 3 === 0) {
+          hero.range = Math.min(6, hero.range + 1);
+        }
+        if (hero.level % 5 === 0) {
+          hero.bombNum = Math.min(6, hero.bombNum + 1);
+        }
+
+        sound.playCoin();
+        this.saveData();
+        ui.updateAllHUD();
+        ui.renderUpgradeModal();
+        ui.showToast(`⬆️ ${hero.name} đã đạt Cấp ${hero.level}! (+1 Power, +15 Stamina)`, 'success');
+      }
+
+      fuseHeroes(mainId, fodderId) {
+        const main = this.heroes.find(h => h.id === mainId);
+        const fodder = this.heroes.find(h => h.id === fodderId);
+        if (!main || !fodder || main.id === fodder.id || main.rarity !== fodder.rarity) return;
+
+        if (this.selectedHeroId === fodder.id) this.deselectHero();
+        this.heroes = this.heroes.filter(h => h.id !== fodder.id);
+
+        main.level += 2;
+        main.power += 2;
+        main.maxStamina += 30;
+        main.stamina = main.maxStamina;
+
+        const rIdx = RARITY_ORDER.indexOf(main.rarity);
+        let evolved = false;
+        if (rIdx < RARITY_ORDER.length - 1 && Math.random() < 0.25) {
+          main.rarity = RARITY_ORDER[rIdx + 1];
+          main.power += 2;
+          evolved = true;
+        }
+
+        sound.playGachaOpen();
+        this.saveData();
+        ui.updateAllHUD();
+        ui.renderUpgradeModal();
+        if (evolved) {
+          ui.showToast(`🌟 ĐỘT PHÁ! ${main.name} thăng bậc lên ${RARITIES[main.rarity].name}!`, 'success');
+        } else {
+          ui.showToast(`🧬 Dung hợp thành công! ${main.name} đạt Lv.${main.level} (+2 Power)!`, 'success');
+        }
+      }
+
+      selectHeroForManual(heroId) {
+        const hero = this.heroes.find(h => h.id === heroId && h.state === 'WORK');
+        if (!hero) return;
+        this.selectedHeroId = hero.id;
+        sound.playClick();
+
+        const banner = document.getElementById('manualBanner');
+        const label = document.getElementById('manualHeroLabel');
+        const touch = document.getElementById('touchControls');
+        if (banner && label) {
+          banner.classList.remove('hidden');
+          label.textContent = `Điều khiển: ${hero.name} (${RARITIES[hero.rarity].name} • Power ${hero.power})`;
+        }
+        if (touch) touch.classList.remove('hidden');
+      }
+
+      deselectHero() {
+        this.selectedHeroId = null;
+        this.touchDir = null;
+        const banner = document.getElementById('manualBanner');
+        const touch = document.getElementById('touchControls');
+        if (banner) banner.classList.add('hidden');
+        if (touch) touch.classList.add('hidden');
+      }
+
+      manualPlaceBomb() {
+        if (!this.selectedHeroId) return;
+        const hero = this.heroes.find(h => h.id === this.selectedHeroId);
+        if (hero && hero.state === 'WORK') {
+          this.placeBombForHero(hero, true);
+        }
+      }
+
+      triggerMegaBomb() {
+        if (this.megaBombCd > 0) {
+          ui.showToast(`Bom Siêu Cấp đang hồi chiêu (${Math.ceil(this.megaBombCd)}s)!`, 'warn');
+          return;
+        }
+
+        let targetC = 7;
+        let targetR = 5;
+
+        if (this.selectedHeroId) {
+          const hero = this.heroes.find(h => h.id === this.selectedHeroId);
+          if (hero) {
+            targetC = Math.floor(hero.x);
+            targetR = Math.floor(hero.y);
+          }
+        } else if (this.chests.length > 0) {
+          let bestScore = -1;
+          for (let r = 1; r < GRID_ROWS - 1; r++) {
+            for (let c = 1; c < GRID_COLS - 1; c++) {
+              if (this.grid[r][c] === TILE.WALL) continue;
+              let score = 0;
+              for (const ch of this.chests) {
+                const dist = Math.abs(ch.c - c) + Math.abs(ch.r - r);
+                if (dist <= 3) score += (ch.type === TILE.CRATE ? 1 : 5);
+              }
+              if (score > bestScore) {
+                bestScore = score;
+                targetC = c;
+                targetR = r;
+              }
+            }
+          }
+        }
+
+        this.bombs.push({
+          c: targetC,
+          r: targetR,
+          ownerId: 'MEGA',
+          power: 45 + this.stage * 12,
+          range: 4,
+          timer: 1.5,
+          maxTimer: 1.5,
+          pierce: true,
+          critChance: 0.5,
+          goldBonus: 0.25,
+          isMega: true,
+          noelStyle: 'STAR_GIFT'
+        });
+
+        this.megaBombCd = this.megaBombMaxCd;
+        sound.playBombPlace();
+        ui.showToast('💥 ĐÃ THẢ BOM SIÊU CẤP NOEL!', 'success');
+      }
+
+      summonBombWithBcoin() {
+        const cost = 15;
+        if (this.bcoin < cost) {
+          ui.showToast(`Cần ${cost} BCOIN để triệu hồi Bom Noel BCOIN!`, 'error');
+          return;
+        }
+
+        const candidateCells = [];
+        for (let r = 1; r < GRID_ROWS - 1; r++) {
+          for (let c = 1; c < GRID_COLS - 1; c++) {
+            if (this.grid[r][c] === TILE.EMPTY && !this.bombs.some(b => b.c === c && b.r === r)) {
+              let nearScore = 0;
+              for (const ch of this.chests) {
+                const dist = Math.abs(ch.c - c) + Math.abs(ch.r - r);
+                if (dist <= 3) nearScore += (ch.type === TILE.CRATE ? 1 : 4);
+              }
+              candidateCells.push({ c, r, nearScore });
+            }
+          }
+        }
+
+        if (candidateCells.length === 0) {
+          ui.showToast('Không còn ô trống hợp lệ để triệu hồi Bom Noel!', 'warn');
+          return;
+        }
+
+        candidateCells.sort((a, b) => b.nearScore - a.nearScore);
+        const topPool = candidateCells.slice(0, Math.min(5, candidateCells.length));
+        const chosen = pickRandom(topPool);
+
+        const summonNoelPalettes = [
+          { light: '#fecdd3', mid: '#e11d48', dark: '#881337', glow: 'rgba(244, 63, 94, 0.48)', accent: '#f8fafc', ribbon: '#facc15', style: 'CANDY_RED' },
+          { light: '#bbf7d0', mid: '#16a34a', dark: '#14532d', glow: 'rgba(34, 197, 94, 0.48)', accent: '#fef08a', ribbon: '#ef4444', style: 'HOLLY_GREEN' },
+          { light: '#bae6fd', mid: '#0284c7', dark: '#0c4a6e', glow: 'rgba(56, 189, 248, 0.48)', accent: '#ffffff', ribbon: '#f43f5e', style: 'FROST_BLUE' },
+          { light: '#fde68a', mid: '#d97706', dark: '#78350f', glow: 'rgba(251, 191, 36, 0.5)', accent: '#fffbeb', ribbon: '#dc2626', style: 'GOLD_BELL' }
+        ];
+        const chosenPal = pickRandom(summonNoelPalettes);
+
+        this.bcoin = Number((this.bcoin - cost).toFixed(2));
+        this.bombs.push({
+          c: chosen.c,
+          r: chosen.r,
+          ownerId: 'BCOIN_SUMMON',
+          power: 28 + this.stage * 8,
+          range: 3,
+          timer: 1.65,
+          maxTimer: 1.65,
+          pierce: true,
+          critChance: 0.35,
+          goldBonus: 0.2,
+          isMega: false,
+          palette: chosenPal,
+          noelStyle: chosenPal.style
+        });
+
+        this.spawnParticles(chosen.c + 0.5, chosen.r + 0.5, '#fda4af', 12);
+        sound.playBombPlace();
+        ui.updateAllHUD();
+        ui.pulseBcoinHud();
+        ui.showToast(`🎄 Đã triệu hồi Bom Noel (-${cost} BCOIN)!`, 'success');
+      }
+
+      getActiveBombCount(heroId) {
+        return this.bombs.filter(b => b.ownerId === heroId).length;
+      }
+
+      placeBombForHero(hero, isManual = false) {
+        if (hero.stunTimer > 0) return false;
+        if (hero.stamina < 1) {
+          if (isManual) ui.showToast(`${hero.name} đã hết thể lực!`, 'warn');
+          return false;
+        }
+        if (this.getActiveBombCount(hero.id) >= hero.bombNum) return false;
+
+        const c = Math.floor(hero.x);
+        const r = Math.floor(hero.y);
+        if (this.grid[r][c] !== TILE.EMPTY) return false;
+        if (this.bombs.some(b => b.c === c && b.r === r)) return false;
+
+        hero.stamina = Math.max(0, hero.stamina - 1);
+        const noelBombPalettes = [
+          { light: '#fecdd3', mid: '#dc2626', dark: '#7f1d1d', glow: 'rgba(239, 68, 68, 0.45)', accent: '#ffffff', ribbon: '#facc15', style: 'CANDY_RED' },
+          { light: '#bbf7d0', mid: '#15803d', dark: '#052e16', glow: 'rgba(34, 197, 94, 0.45)', accent: '#fef08a', ribbon: '#ef4444', style: 'HOLLY_GREEN' },
+          { light: '#bae6fd', mid: '#0369a1', dark: '#082f49', glow: 'rgba(56, 189, 248, 0.45)', accent: '#f8fafc', ribbon: '#fbbf24', style: 'FROST_BLUE' },
+          { light: '#fde68a', mid: '#b45309', dark: '#451a03', glow: 'rgba(250, 204, 21, 0.46)', accent: '#ffffff', ribbon: '#dc2626', style: 'GOLD_BELL' },
+          { light: '#fbcfe8', mid: '#be185d', dark: '#500724', glow: 'rgba(244, 114, 182, 0.45)', accent: '#fef9c3', ribbon: '#38bdf8', style: 'BERRY_NOEL' }
+        ];
+        const colorIndex = Math.abs((hero.name || '').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + (hero.level || 1)) % noelBombPalettes.length;
+        const selectedPal = noelBombPalettes[colorIndex];
+
+        this.bombs.push({
+          c,
+          r,
+          ownerId: hero.id,
+          power: hero.power,
+          range: hero.range,
+          timer: 2.0,
+          maxTimer: 2.0,
+          pierce: hero.skills.includes('PIERCE'),
+          critChance: hero.skills.includes('CHAIN_BLAST') ? 0.35 : 0.08,
+          goldBonus: hero.skills.includes('GOLD_HUNTER') ? 0.25 : 0,
+          isMega: false,
+          palette: selectedPal,
+          noelStyle: selectedPal.style
+        });
+
+        sound.playBombPlace();
+
+        if (hero.stamina <= 0 && this.autoRest) {
+          if (this.selectedHeroId === hero.id) this.deselectHero();
+          hero.state = 'REST';
+          ui.updateAllHUD();
+        }
+        return true;
+      }
+
+      detonateBomb(bomb) {
+        sound.playExplosion();
+
+        const blastCells = [{ c: bomb.c, r: bomb.r }];
+        const dirs = [
+          { dc: 0, dr: -1 },
+          { dc: 0, dr: 1 },
+          { dc: -1, dr: 0 },
+          { dc: 1, dr: 0 }
+        ];
+
+        if (bomb.isMega) {
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              const nc = bomb.c + dc;
+              const nr = bomb.r + dr;
+              if (nc > 0 && nc < GRID_COLS - 1 && nr > 0 && nr < GRID_ROWS - 1 && this.grid[nr][nc] !== TILE.WALL) {
+                if (!blastCells.some(p => p.c === nc && p.r === nr)) {
+                  blastCells.push({ c: nc, r: nr });
+                }
+              }
+            }
+          }
+        }
+
+        for (const d of dirs) {
+          for (let step = 1; step <= bomb.range; step++) {
+            const nc = bomb.c + d.dc * step;
+            const nr = bomb.r + d.dr * step;
+            if (nc <= 0 || nc >= GRID_COLS - 1 || nr <= 0 || nr >= GRID_ROWS - 1) break;
+            const tileVal = this.grid[nr][nc];
+            if (tileVal === TILE.WALL) break;
+
+            if (!blastCells.some(p => p.c === nc && p.r === nr)) {
+              blastCells.push({ c: nc, r: nr });
+            }
+
+            if (tileVal !== TILE.EMPTY && !bomb.pierce) {
+              break;
+            }
+          }
+        }
+
+        for (const cell of blastCells) {
+          this.explosions.push({
+            c: cell.c,
+            r: cell.r,
+            timer: 0.36,
+            maxTimer: 0.36,
+            isMega: bomb.isMega
+          });
+          this.spawnParticles(cell.c + 0.5, cell.r + 0.5, bomb.isMega ? '#facc15' : '#fb923c', 6);
+        }
+
+        for (const other of this.bombs) {
+          if (other !== bomb && other.timer > 0.06) {
+            if (blastCells.some(p => p.c === other.c && p.r === other.r)) {
+              other.timer = 0.05;
+            }
+          }
+        }
+
+        for (const cell of blastCells) {
+          const chest = this.getChestAt(cell.c, cell.r);
+          if (chest && chest.hp > 0) {
+            const isCrit = Math.random() < bomb.critChance;
+            const dmg = Math.round(bomb.power * (isCrit ? 1.5 : 1));
+            chest.hp -= dmg;
+            chest.shakeTimer = 0.25;
+            chest.flashTimer = 0.14;
+
+            this.floatingTexts.push({
+              x: chest.c + 0.5,
+              y: chest.r + 0.2,
+              text: isCrit ? `CHÍ MẠNG -${dmg}!` : `-${dmg}`,
+              color: isCrit ? '#fef08a' : '#ffffff',
+              scale: isCrit ? 1.25 : 1.0,
+              timer: 0.85
+            });
+
+            if (chest.hp <= 0) {
+              this.destroyChest(chest, bomb.goldBonus);
+            }
+          }
+        }
+
+        for (const hero of this.heroes) {
+          if (hero.state !== 'WORK') continue;
+          const hc = Math.floor(hero.x);
+          const hr = Math.floor(hero.y);
+          if (hero.id !== bomb.ownerId && !bomb.isMega) {
+            if (blastCells.some(p => p.c === hc && p.r === hr)) {
+              hero.stunTimer = 1.2;
+              this.floatingTexts.push({
+                x: hero.x,
+                y: hero.y - 0.3,
+                text: 'CHOÁNG!',
+                color: '#fca5a5',
+                scale: 0.9,
+                timer: 0.75
+              });
+            }
+          }
+        }
+      }
+
+      destroyChest(chest, goldBonus = 0) {
+        this.grid[chest.r][chest.c] = TILE.EMPTY;
+        this.chests = this.chests.filter(ch => ch !== chest);
+
+        const colorMap = {
+          [TILE.CRATE]: '#d97706',
+          [TILE.CHEST_WOOD]: '#b45309',
+          [TILE.CHEST_SILVER]: '#e2e8f0',
+          [TILE.CHEST_GOLD]: '#fbbf24',
+          [TILE.CHEST_DIAMOND]: '#38bdf8',
+          [TILE.JAIL]: '#a855f7'
+        };
+        this.spawnParticles(chest.c + 0.5, chest.r + 0.5, colorMap[chest.type] || '#fbbf24', 18);
+
+        if (chest.type === TILE.JAIL) {
+          const rescued = this.createHero();
+          if (rescued.state === 'WORK') {
+            rescued.x = chest.c + 0.5;
+            rescued.y = chest.r + 0.5;
+          }
+          this.heroes.push(rescued);
+          sound.playGachaOpen();
+          this.saveData();
+          ui.updateAllHUD();
+          ui.showRevealOverlay([rescued], '🔓 PHÁ VỠ LỒNG GIAM THÀNH CÔNG!', 'GIẢI CỨU ĐƯỢC ANH HÙNG MỚI!');
+          return;
+        }
+
+        const totalReward = Number((chest.reward * (1 + goldBonus)).toFixed(2));
+        if (totalReward > 0) {
+          sound.playCoin();
+          const coinParticles = chest.type === TILE.CRATE ? 1 : Math.min(8, Math.max(2, Math.ceil(totalReward / 5)));
+          const perCoin = totalReward / coinParticles;
+
+          for (let i = 0; i < coinParticles; i++) {
+            this.flyingCoins.push({
+              startX: (chest.c + 0.5) * this.tileSize,
+              startY: (chest.r + 0.5) * this.tileSize,
+              x: (chest.c + 0.5) * this.tileSize + randInt(-14, 14),
+              y: (chest.r + 0.5) * this.tileSize + randInt(-14, 14),
+              progress: -i * 0.08,
+              value: perCoin
+            });
+          }
+
+          if (chest.type !== TILE.CRATE) {
+            this.floatingTexts.push({
+              x: chest.c + 0.5,
+              y: chest.r,
+              text: `+${totalReward.toFixed(2)} BCOIN`,
+              color: '#fde047',
+              scale: 1.2,
+              timer: 1.15
+            });
+          }
+        }
+      }
+
+      spawnParticles(gx, gy, color, count = 10) {
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 1.2 + Math.random() * 3.8;
+          this.particles.push({
+            x: gx,
+            y: gy,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: 2.5 + Math.random() * 3.5,
+            color,
+            life: 0.35 + Math.random() * 0.35,
+            maxLife: 0.7
+          });
+        }
+      }
+
+      computeDangerMap() {
+        const danger = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(Infinity));
+        const dirs = [
+          { dc: 0, dr: -1 },
+          { dc: 0, dr: 1 },
+          { dc: -1, dr: 0 },
+          { dc: 1, dr: 0 }
+        ];
+
+        for (const b of this.bombs) {
+          const mark = (c, r) => {
+            if (c > 0 && c < GRID_COLS - 1 && r > 0 && r < GRID_ROWS - 1) {
+              danger[r][c] = Math.min(danger[r][c], b.timer);
+            }
+          };
+          mark(b.c, b.r);
+
+          if (b.isMega) {
+            for (let dr = -1; dr <= 1; dr++) {
+              for (let dc = -1; dc <= 1; dc++) {
+                if (this.grid[b.r + dr] && this.grid[b.r + dr][b.c + dc] !== TILE.WALL) {
+                  mark(b.c + dc, b.r + dr);
+                }
+              }
+            }
+          }
+
+          for (const d of dirs) {
+            for (let step = 1; step <= b.range; step++) {
+              const nc = b.c + d.dc * step;
+              const nr = b.r + d.dr * step;
+              if (nc <= 0 || nc >= GRID_COLS - 1 || nr <= 0 || nr >= GRID_ROWS - 1) break;
+              const t = this.grid[nr][nc];
+              if (t === TILE.WALL) break;
+              mark(nc, nr);
+              if (t !== TILE.EMPTY && !b.pierce) break;
+            }
+          }
+        }
+        return danger;
+      }
+
+      isWalkableForAI(c, r, ignoreBombAt = null) {
+        if (c <= 0 || c >= GRID_COLS - 1 || r <= 0 || r >= GRID_ROWS - 1) return false;
+        if (this.grid[r][c] !== TILE.EMPTY) return false;
+        for (const b of this.bombs) {
+          if (ignoreBombAt && b.c === ignoreBombAt.c && b.r === ignoreBombAt.r) continue;
+          if (b.c === c && b.r === r) return false;
+        }
+        return true;
+      }
+
+      canEscapeAfterPlacingBomb(hero, bc, br, dangerMap) {
+        const simDanger = dangerMap.map(row => [...row]);
+        simDanger[br][bc] = Math.min(simDanger[br][bc], 2.0);
+        const dirs = [{ dc: 0, dr: -1 }, { dc: 0, dr: 1 }, { dc: -1, dr: 0 }, { dc: 1, dr: 0 }];
+        const pierce = hero.skills.includes('PIERCE');
+
+        for (const d of dirs) {
+          for (let step = 1; step <= hero.range; step++) {
+            const nc = bc + d.dc * step;
+            const nr = br + d.dr * step;
+            if (nc <= 0 || nc >= GRID_COLS - 1 || nr <= 0 || nr >= GRID_ROWS - 1) break;
+            const t = this.grid[nr][nc];
+            if (t === TILE.WALL) break;
+            simDanger[nr][nc] = Math.min(simDanger[nr][nc], 2.0);
+            if (t !== TILE.EMPTY && !pierce) break;
+          }
+        }
+
+        const queue = [{ c: bc, r: br, dist: 0 }];
+        const visited = new Set([`${bc},${br}`]);
+        while (queue.length > 0) {
+          const cur = queue.shift();
+          if (simDanger[cur.r][cur.c] === Infinity) {
+            return true;
+          }
+          if (cur.dist >= 5) continue;
+
+          for (const d of dirs) {
+            const nc = cur.c + d.dc;
+            const nr = cur.r + d.dr;
+            const key = `${nc},${nr}`;
+            if (!visited.has(key) && this.isWalkableForAI(nc, nr, { c: bc, r: br })) {
+              visited.add(key);
+              queue.push({ c: nc, r: nr, dist: cur.dist + 1 });
+            }
+          }
+        }
+        return false;
+      }
+
+      findBFSPath(startC, startR, dangerMap, mode = 'HUNT') {
+        const queue = [{ c: startC, r: startR, path: [] }];
+        const visited = new Set([`${startC},${startR}`]);
+        const dirs = [
+          { dc: 0, dr: -1 },
+          { dc: 0, dr: 1 },
+          { dc: -1, dr: 0 },
+          { dc: 1, dr: 0 }
+        ];
+
+        let fallbackCratePath = null;
+
+        while (queue.length > 0) {
+          const cur = queue.shift();
+
+          if (mode === 'EVADE') {
+            if (dangerMap[cur.r][cur.c] === Infinity) {
+              return cur.path;
+            }
+          } else if (mode === 'HUNT') {
+            if (dangerMap[cur.r][cur.c] === Infinity) {
+              let hasChestNeighbor = false;
+              let hasCrateNeighbor = false;
+              for (const d of dirs) {
+                const ac = cur.c + d.dc;
+                const ar = cur.r + d.dr;
+                const t = this.grid[ar] ? this.grid[ar][ac] : TILE.WALL;
+                if (t >= TILE.CHEST_WOOD && t <= TILE.JAIL) {
+                  hasChestNeighbor = true;
+                } else if (t === TILE.CRATE) {
+                  hasCrateNeighbor = true;
+                }
+              }
+              if (hasChestNeighbor) return cur.path;
+              if (hasCrateNeighbor && !fallbackCratePath) fallbackCratePath = cur.path;
+            }
+          }
+
+          const shuffledDirs = [...dirs].sort(() => Math.random() - 0.5);
+          for (const d of shuffledDirs) {
+            const nc = cur.c + d.dc;
+            const nr = cur.r + d.dr;
+            const key = `${nc},${nr}`;
+            if (visited.has(key)) continue;
+
+            if (mode === 'HUNT' && dangerMap[nr] && dangerMap[nr][nc] < 1.1) continue;
+            if (mode === 'EVADE' && dangerMap[nr] && dangerMap[nr][nc] < 0.25) continue;
+
+            if (this.isWalkableForAI(nc, nr, { c: startC, r: startR })) {
+              visited.add(key);
+              queue.push({
+                c: nc,
+                r: nr,
+                path: [...cur.path, { c: nc, r: nr }]
+              });
+            }
+          }
+        }
+
+        return fallbackCratePath || [];
+      }
+
+      moveHeroStep(hero, dx, dy, moveSpeed, dt) {
+        if (dx === 0 && dy === 0) return;
+        const len = Math.hypot(dx, dy);
+        dx /= len;
+        dy /= len;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+          hero.dir = dx > 0 ? 'RIGHT' : 'LEFT';
+        } else {
+          hero.dir = dy > 0 ? 'DOWN' : 'UP';
+        }
+
+        const step = moveSpeed * dt;
+        const radius = 0.30;
+
+        let nextX = hero.x + dx * step;
+        if (!this.collidesWallOrChest(nextX, hero.y, radius)) {
+          hero.x = nextX;
+        } else if (dy === 0) {
+          const centerY = Math.floor(hero.y) + 0.5;
+          const diffY = centerY - hero.y;
+          if (Math.abs(diffY) > 0.04 && Math.abs(diffY) < 0.45) {
+            hero.y += Math.sign(diffY) * Math.min(Math.abs(diffY), step * 0.85);
+          }
+        }
+
+        let nextY = hero.y + dy * step;
+        if (!this.collidesWallOrChest(hero.x, nextY, radius)) {
+          hero.y = nextY;
+        } else if (dx === 0) {
+          const centerX = Math.floor(hero.x) + 0.5;
+          const diffX = centerX - hero.x;
+          if (Math.abs(diffX) > 0.04 && Math.abs(diffX) < 0.45) {
+            hero.x += Math.sign(diffX) * Math.min(Math.abs(diffX), step * 0.85);
+          }
+        }
+
+        hero.animTime += dt * moveSpeed * 2.4;
+      }
+
+      collidesWallOrChest(nx, ny, radius) {
+        const minC = Math.floor(nx - radius);
+        const maxC = Math.floor(nx + radius);
+        const minR = Math.floor(ny - radius);
+        const maxR = Math.floor(ny + radius);
+
+        for (let r = minR; r <= maxR; r++) {
+          for (let c = minC; c <= maxC; c++) {
+            if (r < 0 || r >= GRID_ROWS || c < 0 || c >= GRID_COLS) return true;
+            if (this.grid[r][c] !== TILE.EMPTY) return true;
+          }
+        }
+        return false;
+      }
+
+      updateHeroes(dt, dangerMap) {
+        const houseMult = HOUSES[this.houseLevel].mult;
+
+        for (const hero of this.heroes) {
+          const skillChargeBonus = hero.skills.includes('FAST_CHARGE') ? 1.5 : 1.0;
+          if (hero.stamina < hero.maxStamina) {
+            let regenRate = 0.45;
+            if (hero.state === 'REST') regenRate = 1.65;
+            if (hero.state === 'HOME') regenRate = 1.65 * houseMult;
+            hero.stamina = Math.min(hero.maxStamina, hero.stamina + regenRate * skillChargeBonus * dt);
+          }
+
+          if (hero.state !== 'WORK') continue;
+
+          if (hero.stunTimer > 0) {
+            hero.stunTimer = Math.max(0, hero.stunTimer - dt);
+            continue;
+          }
+
+          const swiftBonus = hero.skills.includes('SWIFT_STEP') ? 1.22 : 1.0;
+          const baseTilesPerSec = (2.1 + hero.speed * 0.28) * swiftBonus;
+          const hc = Math.floor(hero.x);
+          const hr = Math.floor(hero.y);
+
+          if (this.selectedHeroId === hero.id) {
+            let dx = 0;
+            let dy = 0;
+            if (this.keys['ArrowUp'] || this.keys['KeyW'] || this.touchDir === 'UP') dy -= 1;
+            if (this.keys['ArrowDown'] || this.keys['KeyS'] || this.touchDir === 'DOWN') dy += 1;
+            if (this.keys['ArrowLeft'] || this.keys['KeyA'] || this.touchDir === 'LEFT') dx -= 1;
+            if (this.keys['ArrowRight'] || this.keys['KeyD'] || this.touchDir === 'RIGHT') dx += 1;
+
+            this.moveHeroStep(hero, dx, dy, baseTilesPerSec * 1.12, dt);
+            continue;
+          }
+
+          const inDanger = dangerMap[hr] && dangerMap[hr][hc] < Infinity;
+
+          if (inDanger) {
+            if (!hero.path || hero.path.length === 0 || dangerMap[hero.path[hero.path.length - 1].r][hero.path[hero.path.length - 1].c] < Infinity) {
+              hero.path = this.findBFSPath(hc, hr, dangerMap, 'EVADE');
+            }
+          } else {
+            if (hero.stamina < 1) {
+              hero.path = [];
+              continue;
+            }
+
+            const dirs = [{ dc: 0, dr: -1 }, { dc: 0, dr: 1 }, { dc: -1, dr: 0 }, { dc: 1, dr: 0 }];
+            let adjacentTarget = false;
+            for (const d of dirs) {
+              const t = this.grid[hr + d.dr] ? this.grid[hr + d.dr][hc + d.dc] : TILE.WALL;
+              if (t >= TILE.CRATE && t <= TILE.JAIL) {
+                adjacentTarget = true;
+                break;
+              }
+            }
+
+            if (adjacentTarget && this.getActiveBombCount(hero.id) < hero.bombNum) {
+              const distCenter = Math.hypot((hc + 0.5) - hero.x, (hr + 0.5) - hero.y);
+              if (distCenter < 0.24 && this.canEscapeAfterPlacingBomb(hero, hc, hr, dangerMap)) {
+                const placed = this.placeBombForHero(hero, false);
+                if (placed) {
+                  const updatedDanger = this.computeDangerMap();
+                  hero.path = this.findBFSPath(hc, hr, updatedDanger, 'EVADE');
+                  continue;
+                }
+              }
+            }
+
+            if (!hero.path || hero.path.length === 0) {
+              hero.aiWait -= dt;
+              if (hero.aiWait <= 0) {
+                hero.path = this.findBFSPath(hc, hr, dangerMap, 'HUNT');
+                hero.aiWait = hero.path.length === 0 ? 0.35 : 0.05;
+              }
+            }
+          }
+
+          if (hero.path && hero.path.length > 0) {
+            const nextNode = hero.path[0];
+            const tx = nextNode.c + 0.5;
+            const ty = nextNode.r + 0.5;
+            const diffX = tx - hero.x;
+            const diffY = ty - hero.y;
+            const dist = Math.hypot(diffX, diffY);
+
+            if (dist < 0.1) {
+              hero.x = tx;
+              hero.y = ty;
+              hero.path.shift();
+            } else {
+              this.moveHeroStep(hero, diffX, diffY, baseTilesPerSec, dt);
+            }
+          }
+        }
+      }
+
+      update(rawDt) {
+        const dt = Math.min(rawDt, 0.05) * this.speedMult;
+
+        if (this.megaBombCd > 0) {
+          this.megaBombCd = Math.max(0, this.megaBombCd - rawDt);
+          const overlay = document.getElementById('megaBombOverlay');
+          if (overlay) {
+            if (this.megaBombCd > 0) {
+              overlay.classList.remove('hidden');
+              overlay.textContent = Math.ceil(this.megaBombCd) + 's';
+            } else {
+              overlay.classList.add('hidden');
+            }
+          }
+        }
+
+        for (const ch of this.chests) {
+          if (ch.shakeTimer > 0) ch.shakeTimer = Math.max(0, ch.shakeTimer - dt);
+          if (ch.flashTimer > 0) ch.flashTimer = Math.max(0, ch.flashTimer - dt);
+        }
+
+        for (let i = this.bombs.length - 1; i >= 0; i--) {
+          const b = this.bombs[i];
+          b.timer -= dt;
+          if (b.timer <= 0) {
+            this.bombs.splice(i, 1);
+            this.detonateBomb(b);
+          }
+        }
+
+        for (let i = this.explosions.length - 1; i >= 0; i--) {
+          const ex = this.explosions[i];
+          ex.timer -= dt;
+          if (ex.timer <= 0) {
+            this.explosions.splice(i, 1);
+          }
+        }
+
+        const dangerMap = this.computeDangerMap();
+        this.updateHeroes(dt, dangerMap);
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.life -= dt;
+          if (p.life <= 0) this.particles.splice(i, 1);
+        }
+
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+          const ft = this.floatingTexts[i];
+          ft.y -= 0.75 * dt;
+          ft.timer -= dt;
+          if (ft.timer <= 0) this.floatingTexts.splice(i, 1);
+        }
+
+        const targetHudX = this.canvas.width * 0.72;
+        const targetHudY = -22;
+        for (let i = this.flyingCoins.length - 1; i >= 0; i--) {
+          const fc = this.flyingCoins[i];
+          fc.progress += rawDt * 1.95;
+          if (fc.progress >= 1) {
+            this.bcoin = Number((this.bcoin + fc.value).toFixed(2));
+            ui.pulseBcoinHud();
+            this.flyingCoins.splice(i, 1);
+          } else if (fc.progress > 0) {
+            const t = fc.progress;
+            const ease = t * t * (3 - 2 * t);
+            fc.x = fc.startX + (targetHudX - fc.startX) * ease;
+            fc.y = fc.startY + (targetHudY - fc.startY) * ease - Math.sin(t * Math.PI) * 45;
+          }
+        }
+
+        if (this.getRemainingChestsCount() === 0 && this.stageClearTransition <= 0) {
+          this.stageClearTransition = 1.4;
+          sound.playStageClear();
+          const stageBonus = Number((5 + this.stage * 2.5).toFixed(2));
+          this.bcoin = Number((this.bcoin + stageBonus).toFixed(2));
+          ui.showToast(`🎉 HOÀN THÀNH MÀN ${this.stage}! Thưởng qua màn +${stageBonus} BCOIN!`, 'success');
+        }
+
+        if (this.stageClearTransition > 0) {
+          this.stageClearTransition -= rawDt;
+          if (this.stageClearTransition <= 0) {
+            this.stage++;
+            this.generateStageMap(this.stage);
+            this.saveData();
+          }
+        }
+
+        ui.updateLiveBars();
+        this.saveTimer += rawDt;
+        if (this.saveTimer >= 5) {
+          this.saveTimer = 0;
+          this.saveData(false);
+        }
+      }
+
+      resizeCanvas() {
+        const container = document.getElementById('arenaContainer');
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const availW = Math.max(280, rect.width - 16);
+        const availH = Math.max(220, rect.height - 16);
+
+        this.tileSize = Math.max(20, Math.floor(Math.min(availW / GRID_COLS, availH / GRID_ROWS)));
+        this.canvas.width = this.tileSize * GRID_COLS;
+        this.canvas.height = this.tileSize * GRID_ROWS;
+      }
+
+      render() {
+        const ctx = this.ctx;
+        const ts = this.tileSize;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const dangerMap = this.computeDangerMap();
+        const isTetStage = this.stage % 2 === 0;
+        const nowMs = performance.now();
+
+        for (let r = 0; r < GRID_ROWS; r++) {
+          for (let c = 0; c < GRID_COLS; c++) {
+            const x = c * ts;
+            const y = r * ts;
+            const tile = this.grid[r][c];
+
+            if (tile === TILE.WALL) {
+              this.drawStoneWall(
+                ctx,
+                x,
+                y,
+                ts,
+                r === 0 || r === GRID_ROWS - 1 || c === 0 || c === GRID_COLS - 1,
+                isTetStage
+              );
+            } else {
+              const isAlt = (r + c) % 2 === 0;
+              if (isTetStage) {
+                ctx.fillStyle = isAlt ? '#7f1d1d' : '#681515';
+                ctx.fillRect(x, y, ts, ts);
+
+                ctx.strokeStyle = isAlt ? 'rgba(250, 204, 21, 0.22)' : 'rgba(251, 191, 36, 0.15)';
+                ctx.lineWidth = 1.2;
+                ctx.strokeRect(x + ts * 0.14, y + ts * 0.14, ts * 0.72, ts * 0.72);
+                ctx.fillStyle = isAlt ? 'rgba(254, 240, 138, 0.28)' : 'rgba(245, 158, 11, 0.2)';
+                ctx.beginPath();
+                ctx.arc(x + ts * 0.5, y + ts * 0.5, ts * 0.06, 0, Math.PI * 2);
+                ctx.fill();
+              } else {
+                ctx.fillStyle = isAlt ? '#1e4d6b' : '#173e57';
+                ctx.fillRect(x, y, ts, ts);
+
+                ctx.fillStyle = isAlt ? 'rgba(240, 249, 255, 0.26)' : 'rgba(224, 242, 254, 0.18)';
+                ctx.fillRect(x + ts * 0.14, y + ts * 0.18, ts * 0.26, ts * 0.11);
+                ctx.fillRect(x + ts * 0.56, y + ts * 0.64, ts * 0.22, ts * 0.09);
+              }
+
+              if (dangerMap[r][c] < Infinity) {
+                const pulse = 0.22 + 0.22 * Math.sin(nowMs * 0.018);
+                ctx.fillStyle = `rgba(239, 68, 68, ${pulse})`;
+                ctx.fillRect(x + 2, y + 2, ts - 4, ts - 4);
+                ctx.strokeStyle = 'rgba(254, 202, 202, 0.65)';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(x + 2.5, y + 2.5, ts - 5, ts - 5);
+              }
+            }
+          }
+        }
+
+        for (let c = 1; c < GRID_COLS - 1; c++) {
+          const centerX = (c + 0.5) * ts;
+          if (isTetStage) {
+            const sway = Math.sin(nowMs * 0.004 + c * 0.9) * (ts * 0.045);
+            const lanternY = ts * 0.62;
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(centerX, ts * 0.44);
+            ctx.lineTo(centerX + sway, lanternY - ts * 0.14);
+            ctx.stroke();
+
+            ctx.fillStyle = c % 2 === 0 ? '#ef4444' : '#f97316';
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 1.3;
+            ctx.beginPath();
+            ctx.ellipse(centerX + sway, lanternY, ts * 0.14, ts * 0.17, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.strokeStyle = '#fde047';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(centerX + sway, lanternY + ts * 0.17);
+            ctx.lineTo(centerX + sway, lanternY + ts * 0.28);
+            ctx.stroke();
+          } else {
+            const bulbColors = ['#ef4444', '#22c55e', '#facc15', '#38bdf8'];
+            const bulbCol = bulbColors[c % bulbColors.length];
+            const glowAlpha = 0.55 + 0.45 * Math.sin(nowMs * 0.006 + c);
+            ctx.fillStyle = bulbCol;
+            ctx.globalAlpha = glowAlpha;
+            ctx.beginPath();
+            ctx.arc(centerX, ts * 0.54, ts * 0.08, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        }
+
+        for (const ch of this.chests) {
+          const shakeX = ch.shakeTimer > 0 ? (Math.random() - 0.5) * 5 : 0;
+          const shakeY = ch.shakeTimer > 0 ? (Math.random() - 0.5) * 5 : 0;
+          const x = ch.c * ts + shakeX;
+          const y = ch.r * ts + shakeY;
+
+          this.drawChestEntity(ctx, ch, x, y, ts);
+
+          if (ch.type !== TILE.CRATE || ch.hp < ch.maxHp) {
+            const barW = ts * 0.82;
+            const barH = Math.max(4, ts * 0.11);
+            const bx = x + (ts - barW) / 2;
+            const by = y + 2;
+            const pct = Math.max(0, ch.hp / ch.maxHp);
+
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.fillRect(bx - 1, by - 1, barW + 2, barH + 2);
+            ctx.fillStyle = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#f59e0b' : '#ef4444';
+            ctx.fillRect(bx, by, barW * pct, barH);
+          }
+        }
+
+        for (const b of this.bombs) {
+          this.drawBomb(ctx, b, ts);
+        }
+
+        for (const ex of this.explosions) {
+          const alpha = ex.timer / ex.maxTimer;
+          const x = ex.c * ts;
+          const y = ex.r * ts;
+          ctx.fillStyle = ex.isMega
+            ? `rgba(253, 224, 71, ${alpha * 0.92})`
+            : `rgba(249, 115, 22, ${alpha * 0.88})`;
+          ctx.fillRect(x + 2, y + 2, ts - 4, ts - 4);
+
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.85})`;
+          ctx.fillRect(x + ts * 0.22, y + ts * 0.22, ts * 0.56, ts * 0.56);
+        }
+
+        const activeHeroes = this.heroes
+          .filter(h => h.state === 'WORK')
+          .sort((a, b) => a.y - b.y);
+
+        for (const hero of activeHeroes) {
+          this.drawHeroSprite(ctx, hero, ts);
+        }
+
+        for (let i = 0; i < 16; i++) {
+          const fx = (((i * 97 + nowMs * (isTetStage ? 0.022 : 0.016)) % (this.canvas.width - 12)) + 6);
+          const fy = (((i * 61 + nowMs * (isTetStage ? 0.032 : 0.026)) % (this.canvas.height - 12)) + 6);
+          if (isTetStage) {
+            ctx.fillStyle = i % 2 === 0 ? 'rgba(250, 204, 21, 0.72)' : 'rgba(251, 113, 133, 0.72)';
+            ctx.beginPath();
+            ctx.ellipse(fx, fy, Math.max(2.5, ts * 0.08), Math.max(1.5, ts * 0.045), 0.5, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.beginPath();
+            ctx.arc(fx, fy, Math.max(2, ts * 0.055), 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        for (const p of this.particles) {
+          ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x * ts - p.size / 2, p.y * ts - p.size / 2, p.size, p.size);
+        }
+        ctx.globalAlpha = 1;
+
+        ctx.textAlign = 'center';
+        for (const ft of this.floatingTexts) {
+          const alpha = Math.min(1, ft.timer * 1.6);
+          ctx.globalAlpha = Math.max(0, alpha);
+          ctx.fillStyle = ft.color;
+          ctx.font = `800 ${Math.round(ts * 0.34 * ft.scale)}px "Chakra Petch", sans-serif`;
+          ctx.fillText(ft.text, ft.x * ts, ft.y * ts);
+        }
+        ctx.globalAlpha = 1;
+
+        for (const fc of this.flyingCoins) {
+          if (fc.progress < 0) continue;
+          const rCoin = Math.max(6, ts * 0.18);
+          ctx.fillStyle = '#fbbf24';
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(fc.x, fc.y, rCoin, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        if (this.stageClearTransition > 0) {
+          const nextIsTet = (this.stage + 1) % 2 === 0;
+          ctx.fillStyle = 'rgba(11, 16, 33, 0.76)';
+          ctx.fillRect(0, this.canvas.height * 0.35, this.canvas.width, this.canvas.height * 0.30);
+          ctx.fillStyle = '#fbbf24';
+          ctx.font = `800 ${Math.round(ts * 0.62)}px "Chakra Petch", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText(`HOÀN THÀNH MÀN ${this.stage}!`, this.canvas.width / 2, this.canvas.height * 0.48);
+          ctx.fillStyle = nextIsTet ? '#fda4af' : '#67e8f9';
+          ctx.font = `700 ${Math.round(ts * 0.34)}px "Chakra Petch", sans-serif`;
+          ctx.fillText(
+            nextIsTet ? `Sang Màn ${this.stage + 1}: Đấu Trường Tết Nguyên Đán!` : `Sang Màn ${this.stage + 1}: Đấu Trường Giáng Sinh Noel!`,
+            this.canvas.width / 2,
+            this.canvas.height * 0.59
+          );
+        }
+      }
+
+      drawStoneWall(ctx, x, y, ts, isBorder, isTetStage = false) {
+        ctx.fillStyle = 'rgba(2, 6, 23, 0.5)';
+        ctx.fillRect(x + 2, y + ts - 2, ts - 1, 7);
+
+        const wallGrad = ctx.createLinearGradient(x, y, x, y + ts);
+        if (isTetStage) {
+          if (isBorder) {
+            wallGrad.addColorStop(0, '#5c1818');
+            wallGrad.addColorStop(1, '#290909');
+          } else {
+            wallGrad.addColorStop(0, '#882424');
+            wallGrad.addColorStop(0.55, '#641818');
+            wallGrad.addColorStop(1, '#3d0c0c');
+          }
+        } else {
+          if (isBorder) {
+            wallGrad.addColorStop(0, '#2d4163');
+            wallGrad.addColorStop(1, '#111827');
+          } else {
+            wallGrad.addColorStop(0, '#475c84');
+            wallGrad.addColorStop(0.55, '#314161');
+            wallGrad.addColorStop(1, '#1d263b');
+          }
+        }
+        ctx.fillStyle = wallGrad;
+        ctx.fillRect(x, y, ts, ts);
+
+        ctx.fillStyle = isTetStage
+          ? 'rgba(253, 224, 71, 0.34)'
+          : (isBorder ? 'rgba(148, 163, 184, 0.28)' : 'rgba(241, 245, 249, 0.38)');
+        ctx.fillRect(x + 2, y + 2, ts - 4, ts * 0.14);
+
+        const brickH = ts * 0.33;
+        const row1Y = y + ts * 0.19;
+        const row2Y = y + ts * 0.56;
+
+        const drawBrick = (bx, by, bw, bh) => {
+          ctx.fillStyle = isTetStage
+            ? (isBorder ? '#3f1010' : '#731d1d')
+            : (isBorder ? '#1f2e47' : '#3a4c70');
+          ctx.fillRect(bx, by, bw, bh);
+
+          ctx.fillStyle = isTetStage
+            ? 'rgba(254, 240, 138, 0.28)'
+            : (isBorder ? 'rgba(148, 163, 184, 0.26)' : 'rgba(248, 250, 252, 0.34)');
+          ctx.fillRect(bx, by, bw, Math.max(1.5, bh * 0.16));
+          ctx.fillRect(bx, by, Math.max(1.5, bw * 0.08), bh);
+
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+          ctx.fillRect(bx + bw * 0.25, by + bh * 0.45, Math.max(2, bw * 0.14), Math.max(1.5, bh * 0.14));
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+          ctx.fillRect(bx + bw * 0.62, by + bh * 0.32, Math.max(1.5, bw * 0.1), Math.max(1.5, bh * 0.12));
+
+          ctx.fillStyle = 'rgba(2, 6, 23, 0.48)';
+          ctx.fillRect(bx, by + bh - Math.max(1.5, bh * 0.16), bw, Math.max(1.5, bh * 0.16));
+          ctx.fillRect(bx + bw - Math.max(1.5, bw * 0.08), by, Math.max(1.5, bw * 0.08), bh);
+        };
+
+        drawBrick(x + 3, row1Y, ts * 0.44, brickH - 2);
+        drawBrick(x + ts * 0.51, row1Y, ts * 0.45, brickH - 2);
+
+        drawBrick(x + 3, row2Y, ts * 0.24, brickH - 2);
+        drawBrick(x + ts * 0.31, row2Y, ts * 0.42, brickH - 2);
+        drawBrick(x + ts * 0.77, row2Y, ts * 0.19, brickH - 2);
+
+        if (!isBorder) {
+          if (isTetStage) {
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(x + ts * 0.18, y + ts * 0.16, ts * 0.08, 0, Math.PI * 2);
+            ctx.arc(x + ts * 0.84, y + ts * 0.84, ts * 0.065, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.arc(x + ts * 0.17, y + ts * 0.17, ts * 0.105, 0, Math.PI * 2);
+            ctx.arc(x + ts * 0.27, y + ts * 0.13, ts * 0.072, 0, Math.PI * 2);
+            ctx.arc(x + ts * 0.82, y + ts * 0.84, ts * 0.07, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#bae6fd';
+            ctx.beginPath();
+            ctx.arc(x + ts * 0.15, y + ts * 0.15, ts * 0.048, 0, Math.PI * 2);
+            ctx.arc(x + ts * 0.84, y + ts * 0.85, ts * 0.042, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        ctx.strokeStyle = isTetStage ? '#3b0707' : '#090d16';
+        ctx.lineWidth = 2.2;
+        ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
+      }
+
+      drawChestEntity(ctx, ch, x, y, ts) {
+        const pad = ts * 0.085;
+        const w = ts - pad * 2;
+        const h = ts - pad * 2;
+        const cx = x + pad;
+        const cy = y + pad;
+        const nowMs = performance.now();
+
+        ctx.fillStyle = 'rgba(2, 6, 23, 0.42)';
+        ctx.beginPath();
+        ctx.ellipse(x + ts / 2, y + ts - ts * 0.065, w * 0.46, ts * 0.075, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (ch.type === TILE.CRATE) {
+          const crateGrad = ctx.createLinearGradient(cx, cy, cx, cy + h);
+          crateGrad.addColorStop(0, '#c2590c');
+          crateGrad.addColorStop(0.5, '#9a3412');
+          crateGrad.addColorStop(1, '#6c270d');
+          ctx.fillStyle = crateGrad;
+          ctx.beginPath();
+          ctx.roundRect(cx, cy, w, h, 3.5);
+          ctx.fill();
+
+          ctx.fillStyle = 'rgba(254, 243, 199, 0.22)';
+          ctx.fillRect(cx + 2, cy + 2, w - 4, h * 0.11);
+          ctx.fillStyle = 'rgba(254, 243, 199, 0.12)';
+          ctx.fillRect(cx + 3, cy + h * 0.34, w - 6, h * 0.09);
+          ctx.fillRect(cx + 3, cy + h * 0.72, w - 6, h * 0.09);
+
+          ctx.strokeStyle = '#451a03';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(cx, cy, w, h);
+          ctx.beginPath();
+          ctx.moveTo(cx + 2, cy + 2);
+          ctx.lineTo(cx + w - 2, cy + h - 2);
+          ctx.moveTo(cx + w - 2, cy + 2);
+          ctx.lineTo(cx + 2, cy + h - 2);
+          ctx.stroke();
+
+          ctx.fillStyle = '#fde047';
+          ctx.fillRect(cx + 3, cy + 3, 2.6, 2.6);
+          ctx.fillRect(cx + w - 5.6, cy + 3, 2.6, 2.6);
+          ctx.fillRect(cx + 3, cy + h - 5.6, 2.6, 2.6);
+          ctx.fillRect(cx + w - 5.6, cy + h - 5.6, 2.6, 2.6);
+        } else if (ch.type === TILE.JAIL) {
+          const jailGrad = ctx.createLinearGradient(cx, cy, cx, cy + h);
+          jailGrad.addColorStop(0, '#5b21b6');
+          jailGrad.addColorStop(1, '#1e1b4b');
+          ctx.fillStyle = jailGrad;
+          ctx.beginPath();
+          ctx.roundRect(cx, cy, w, h, 4);
+          ctx.fill();
+
+          ctx.fillStyle = '#fde68a';
+          ctx.beginPath();
+          ctx.arc(x + ts / 2, y + ts * 0.55, ts * 0.19, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.moveTo(x + ts * 0.34, y + ts * 0.43);
+          ctx.lineTo(x + ts * 0.5, y + ts * 0.22);
+          ctx.lineTo(x + ts * 0.66, y + ts * 0.43);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(x + ts * 0.34, y + ts * 0.4, ts * 0.32, ts * 0.05);
+
+          ctx.strokeStyle = '#f1f5f9';
+          ctx.lineWidth = 2.2;
+          ctx.strokeRect(cx, cy, w, h);
+          for (let i = 1; i <= 3; i++) {
+            const bx = cx + (w / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(bx, cy);
+            ctx.lineTo(bx, cy + h);
+            ctx.stroke();
+          }
+
+          ctx.fillStyle = '#e11d48';
+          ctx.fillRect(x + ts * 0.23, y + ts * 0.71, ts * 0.54, ts * 0.21);
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + ts * 0.23, y + ts * 0.71, ts * 0.54, ts * 0.21);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `800 ${Math.max(8, Math.round(ts * 0.17))}px "Chakra Petch", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText('SOS', x + ts / 2, y + ts * 0.865);
+        } else {
+          const styles = {
+            [TILE.CHEST_WOOD]: {
+              bodyTop: '#b45309',
+              bodyBot: '#6b2f08',
+              lidTop: '#fbbf24',
+              lidBot: '#b45309',
+              trim: '#fcd34d',
+              lock: '#fef08a',
+              gem: '#22c55e'
+            },
+            [TILE.CHEST_SILVER]: {
+              bodyTop: '#64748b',
+              bodyBot: '#1e293b',
+              lidTop: '#f8fafc',
+              lidBot: '#94a3b8',
+              trim: '#e2e8f0',
+              lock: '#38bdf8',
+              gem: '#7dd3fc'
+            },
+            [TILE.CHEST_GOLD]: {
+              bodyTop: '#d97706',
+              bodyBot: '#78350f',
+              lidTop: '#fef9c3',
+              lidBot: '#eab308',
+              trim: '#fde047',
+              lock: '#ef4444',
+              gem: '#fb7185'
+            },
+            [TILE.CHEST_DIAMOND]: {
+              bodyTop: '#0284c7',
+              bodyBot: '#172554',
+              lidTop: '#e0f2fe',
+              lidBot: '#38bdf8',
+              trim: '#67e8f9',
+              lock: '#f472b6',
+              gem: '#e879f9'
+            }
+          };
+          const st = styles[ch.type];
+          const chestY = cy + h * 0.15;
+          const chestH = h * 0.8;
+          const lidH = chestH * 0.44;
+
+          if (ch.type !== TILE.CHEST_WOOD) {
+            const auraR = ts * 0.54;
+            const auraGrad = ctx.createRadialGradient(x + ts / 2, y + ts / 2, ts * 0.1, x + ts / 2, y + ts / 2, auraR);
+            const auraColor = ch.type === TILE.CHEST_DIAMOND
+              ? 'rgba(103, 232, 249, 0.36)'
+              : ch.type === TILE.CHEST_GOLD
+                ? 'rgba(250, 204, 21, 0.35)'
+                : 'rgba(186, 230, 253, 0.22)';
+            auraGrad.addColorStop(0, auraColor);
+            auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = auraGrad;
+            ctx.beginPath();
+            ctx.arc(x + ts / 2, y + ts / 2, auraR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          const bodyGrad = ctx.createLinearGradient(cx, chestY + lidH, cx, chestY + chestH);
+          bodyGrad.addColorStop(0, st.bodyTop);
+          bodyGrad.addColorStop(1, st.bodyBot);
+          ctx.fillStyle = bodyGrad;
+          ctx.beginPath();
+          ctx.roundRect(cx, chestY + lidH * 0.85, w, chestH - lidH * 0.85, [0, 0, 4.5, 4.5]);
+          ctx.fill();
+
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+          ctx.fillRect(cx + w * 0.28, chestY + lidH + 2, Math.max(1.5, w * 0.06), chestH - lidH - 4);
+          ctx.fillRect(cx + w * 0.66, chestY + lidH + 2, Math.max(1.5, w * 0.06), chestH - lidH - 4);
+
+          const lidGrad = ctx.createLinearGradient(cx, chestY, cx, chestY + lidH);
+          lidGrad.addColorStop(0, st.lidTop);
+          lidGrad.addColorStop(1, st.lidBot);
+          ctx.fillStyle = lidGrad;
+          ctx.beginPath();
+          ctx.roundRect(cx, chestY, w, lidH, [5.5, 5.5, 1, 1]);
+          ctx.fill();
+
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+          ctx.fillRect(cx + w * 0.24, chestY + 2, w * 0.52, Math.max(1.5, lidH * 0.2));
+
+          ctx.fillStyle = st.trim;
+          ctx.fillRect(cx + w * 0.12, chestY, ts * 0.085, chestH);
+          ctx.fillRect(cx + w * 0.88 - ts * 0.085, chestY, ts * 0.085, chestH);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(cx + w * 0.14, chestY + 2.5, 2, 2);
+          ctx.fillRect(cx + w * 0.86 - ts * 0.065, chestY + 2.5, 2, 2);
+
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(cx, chestY, w, chestH, [5.5, 5.5, 4.5, 4.5]);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(cx, chestY + lidH);
+          ctx.lineTo(cx + w, chestY + lidH);
+          ctx.stroke();
+
+          const lockW = Math.max(6.5, ts * 0.19);
+          const lockH = Math.max(7.5, ts * 0.21);
+          const lockX = x + ts / 2 - lockW / 2;
+          const lockY = chestY + lidH - lockH * 0.42;
+
+          ctx.fillStyle = st.lock;
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.roundRect(lockX, lockY, lockW, lockH, 2.2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#090d16';
+          ctx.beginPath();
+          ctx.arc(x + ts / 2, lockY + lockH * 0.45, Math.max(1.5, lockW * 0.18), 0, Math.PI * 2);
+          ctx.fill();
+
+          if (ch.type === TILE.CHEST_GOLD || ch.type === TILE.CHEST_DIAMOND) {
+            ctx.fillStyle = st.gem;
+            ctx.strokeStyle = '#090d16';
+            ctx.lineWidth = 1.1;
+            ctx.beginPath();
+            ctx.arc(x + ts / 2, chestY + lidH * 0.34, Math.max(2.4, ts * 0.075), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            const sparkle = 0.45 + 0.55 * Math.sin(nowMs * 0.009 + ch.c * 1.7 + ch.r);
+            ctx.fillStyle = `rgba(255, 255, 255, ${sparkle})`;
+            const spX = cx + w * 0.25;
+            const spY = chestY + lidH * 0.35;
+            ctx.beginPath();
+            ctx.arc(spX, spY, Math.max(2.1, ts * 0.065), 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if (ch.flashTimer > 0) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.58)';
+          ctx.fillRect(cx, cy, w, h);
+        }
+      }
+
+      drawBomb(ctx, b, ts) {
+        const cx = (b.c + 0.5) * ts;
+        const cy = (b.r + 0.5) * ts;
+        const progress = 1 - Math.max(0, b.timer / b.maxTimer);
+        const pulse = 1 + Math.sin(performance.now() * (0.014 + progress * 0.032)) * (0.09 + progress * 0.06);
+        const radius = ts * (b.isMega ? 0.39 : 0.35) * pulse;
+        const nowMs = performance.now();
+        const pal = b.palette || {
+          light: '#fecdd3',
+          mid: '#dc2626',
+          dark: '#7f1d1d',
+          glow: 'rgba(239, 68, 68, 0.45)',
+          accent: '#ffffff',
+          ribbon: '#facc15',
+          style: 'CANDY_RED'
+        };
+
+        const glowRadius = ts * (b.isMega ? 0.58 : 0.49) * (0.92 + 0.08 * Math.sin(nowMs * 0.015));
+        const glowGrad = ctx.createRadialGradient(cx, cy, radius * 0.25, cx, cy, glowRadius);
+        if (b.isMega) {
+          glowGrad.addColorStop(0, 'rgba(250, 204, 21, 0.5)');
+          glowGrad.addColorStop(0.6, 'rgba(239, 68, 68, 0.32)');
+          glowGrad.addColorStop(1, 'rgba(34, 197, 94, 0)');
+        } else {
+          glowGrad.addColorStop(0, pal.glow);
+          glowGrad.addColorStop(0.7, b.timer < 0.65 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(248, 250, 252, 0.14)');
+          glowGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        }
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = b.timer < 0.55 ? '#ff2a55' : (b.isMega ? '#fde047' : pal.accent);
+        ctx.lineWidth = Math.max(2, ts * 0.055);
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius + ts * 0.075, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - progress));
+        ctx.stroke();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.clip();
+
+        const bodyGrad = ctx.createRadialGradient(
+          cx - radius * 0.32,
+          cy - radius * 0.34,
+          radius * 0.1,
+          cx,
+          cy,
+          radius
+        );
+        if (b.isMega) {
+          bodyGrad.addColorStop(0, '#fef08a');
+          bodyGrad.addColorStop(0.5, '#dc2626');
+          bodyGrad.addColorStop(1, '#14532d');
+        } else {
+          bodyGrad.addColorStop(0, pal.light);
+          bodyGrad.addColorStop(0.55, pal.mid);
+          bodyGrad.addColorStop(1, pal.dark);
+        }
+        ctx.fillStyle = bodyGrad;
+        ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+
+        ctx.strokeStyle = b.isMega ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.24)';
+        ctx.lineWidth = Math.max(2, radius * 0.16);
+        for (let offset = -radius * 1.4; offset <= radius * 1.4; offset += radius * 0.55) {
+          ctx.beginPath();
+          ctx.moveTo(cx + offset - radius * 0.4, cy - radius);
+          ctx.lineTo(cx + offset + radius * 0.4, cy + radius);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = b.isMega ? '#facc15' : (pal.ribbon || '#facc15');
+        ctx.fillRect(cx - radius, cy - radius * 0.12, radius * 2, radius * 0.24);
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.4;
+        ctx.strokeRect(cx - radius, cy - radius * 0.12, radius * 2, radius * 0.24);
+
+        ctx.restore();
+
+        ctx.lineWidth = 2.2;
+        ctx.strokeStyle = b.isMega ? '#fde047' : '#0f172a';
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const bowY = cy;
+        const bowW = radius * 0.28;
+        const bowH = radius * 0.2;
+        ctx.fillStyle = b.isMega ? '#ef4444' : '#ffffff';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(cx, bowY);
+        ctx.lineTo(cx - bowW, bowY - bowH);
+        ctx.lineTo(cx - bowW, bowY + bowH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(cx, bowY);
+        ctx.lineTo(cx + bowW, bowY - bowH);
+        ctx.lineTo(cx + bowW, bowY + bowH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(cx, bowY, radius * 0.11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        const capW = radius * 0.52;
+        const capH = radius * 0.26;
+        const capX = cx - capW / 2;
+        const capY = cy - radius * 0.96 - capH / 2;
+        ctx.fillStyle = '#facc15';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.6;
+        ctx.fillRect(capX, capY, capW, capH);
+        ctx.strokeRect(capX, capY, capW, capH);
+
+        if (b.isMega) {
+          ctx.fillStyle = '#fef08a';
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) {
+            const rad = i % 2 === 0 ? radius * 0.28 : radius * 0.12;
+            const ang = -Math.PI / 2 + (i * Math.PI) / 5;
+            const sx = cx - radius * 0.42 + Math.cos(ang) * rad;
+            const sy = cy - radius * 0.92 + Math.sin(ang) * rad;
+            if (i === 0) ctx.moveTo(sx, sy);
+            else ctx.lineTo(sx, sy);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.48)';
+        ctx.beginPath();
+        ctx.ellipse(cx - radius * 0.35, cy - radius * 0.36, radius * 0.22, radius * 0.12, -0.65, 0, Math.PI * 2);
+        ctx.fill();
+
+        const fuseStartX = cx + capW * 0.35;
+        const fuseStartY = capY;
+        const fuseTipX = cx + radius * 0.72;
+        const fuseTipY = cy - radius * 1.28;
+
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(fuseStartX, fuseStartY);
+        ctx.quadraticCurveTo(cx + radius * 0.55, cy - radius * 1.18, fuseTipX, fuseTipY);
+        ctx.stroke();
+
+        const sparkPulse = 0.75 + 0.45 * Math.sin(nowMs * 0.045);
+        const sparkR = Math.max(3.5, ts * 0.095) * sparkPulse;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(fuseTipX, fuseTipY, sparkR, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 1.6;
+        const rayLen = sparkR * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(fuseTipX - rayLen, fuseTipY);
+        ctx.lineTo(fuseTipX + rayLen, fuseTipY);
+        ctx.moveTo(fuseTipX, fuseTipY - rayLen);
+        ctx.lineTo(fuseTipX, fuseTipY + rayLen);
+        ctx.moveTo(fuseTipX - rayLen * 0.75, fuseTipY - rayLen * 0.75);
+        ctx.lineTo(fuseTipX + rayLen * 0.75, fuseTipY + rayLen * 0.75);
+        ctx.moveTo(fuseTipX + rayLen * 0.75, fuseTipY - rayLen * 0.75);
+        ctx.lineTo(fuseTipX - rayLen * 0.75, fuseTipY + rayLen * 0.75);
+        ctx.stroke();
+      }
+
+      drawHeroSprite(ctx, hero, ts) {
+        const cfg = RARITIES[hero.rarity];
+        const cx = hero.x * ts;
+        const cy = hero.y * ts;
+        const isSelected = this.selectedHeroId === hero.id;
+        const isMoving = hero.path && hero.path.length > 0;
+        const nowSec = performance.now() * 0.001;
+        const bob = isMoving ? Math.abs(Math.sin(hero.animTime)) * (ts * 0.09) : Math.sin(nowSec * 3.5 + hero.x) * (ts * 0.022);
+        const tilt = isMoving ? Math.sin(hero.animTime) * 0.075 : 0;
+
+        if (isSelected) {
+          const pulseR = ts * (0.44 + 0.05 * Math.sin(nowSec * 9));
+          ctx.strokeStyle = '#fde047';
+          ctx.lineWidth = 2.6;
+          ctx.beginPath();
+          ctx.arc(cx, cy + ts * 0.14, pulseR, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        if (cfg.aura) {
+          const auraPulse = 0.28 + 0.14 * Math.sin(nowSec * 5 + hero.y);
+          ctx.fillStyle = cfg.color;
+          ctx.globalAlpha = auraPulse;
+          ctx.beginPath();
+          ctx.arc(cx, cy, ts * 0.46, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.36)';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + ts * 0.34, ts * 0.28, ts * 0.11, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const headR = ts * 0.31;
+        const headY = cy - bob;
+
+        ctx.save();
+        ctx.translate(cx, headY);
+        ctx.rotate(tilt);
+
+        if (cfg.cape) {
+          const capeWave = Math.sin(nowSec * 8 + hero.x) * (ts * 0.045);
+          ctx.fillStyle = cfg.color;
+          ctx.beginPath();
+          ctx.moveTo(-headR * 0.72, headR * 0.62);
+          ctx.lineTo(headR * 0.72, headR * 0.62);
+          ctx.lineTo(headR * 0.96 + capeWave, headR * 1.48);
+          ctx.lineTo(-headR * 0.96 + capeWave, headR * 1.48);
+          ctx.closePath();
+          ctx.fill();
+          ctx.lineWidth = 1.4;
+          ctx.strokeStyle = '#0f172a';
+          ctx.stroke();
+        }
+
+        const armSwing = isMoving ? Math.cos(hero.animTime) * (ts * 0.055) : 0;
+        const arch = hero.archetype || 'SANTA';
+        if (arch === 'ANGEL' || arch === 'TREE') {
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          ctx.moveTo(headR * 0.96, headR * 1.25 - armSwing);
+          ctx.lineTo(headR * 1.12, headR * 0.15 - armSwing);
+          ctx.stroke();
+          ctx.fillStyle = arch === 'ANGEL' ? '#fef08a' : '#ef4444';
+          ctx.beginPath();
+          ctx.arc(headR * 1.14, headR * 0.08 - armSwing, headR * 0.22, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        } else if (arch === 'SNOWMAN' || arch === 'ELF') {
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 2.6;
+          ctx.beginPath();
+          ctx.moveTo(headR * 0.98, headR * 1.22 - armSwing);
+          ctx.lineTo(headR * 1.06, headR * 0.35 - armSwing);
+          ctx.arc(headR * 1.22, headR * 0.35 - armSwing, headR * 0.16, Math.PI, 0, false);
+          ctx.stroke();
+        } else if (arch === 'SANTA' || arch === 'REINDEER') {
+          ctx.fillStyle = arch === 'SANTA' ? '#dc2626' : '#facc15';
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(headR * 1.08, headR * 0.65 - armSwing, headR * 0.28, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = cfg.armor;
+        ctx.beginPath();
+        ctx.arc(0, 0, headR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 2.1;
+        ctx.strokeStyle = '#0f172a';
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.26)';
+        ctx.beginPath();
+        ctx.ellipse(-headR * 0.24, -headR * 0.54, headR * 0.44, headR * 0.18, -0.35, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (arch === 'SANTA' || arch === 'ELF') {
+          const hatWave = Math.sin(nowSec * 7.5 + hero.x * 2) * (ts * 0.04);
+          ctx.fillStyle = arch === 'SANTA' ? '#dc2626' : '#16a34a';
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.7;
+          ctx.beginPath();
+          ctx.moveTo(-headR * 0.94, -headR * 0.55);
+          ctx.quadraticCurveTo(-headR * 0.1, -headR * 1.48, headR * 0.88 + hatWave, -headR * 1.02 + hatWave * 0.4);
+          ctx.lineTo(headR * 0.86, -headR * 0.55);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(-headR * 0.96, -headR * 0.68, headR * 1.92, headR * 0.2);
+          ctx.strokeRect(-headR * 0.96, -headR * 0.68, headR * 1.92, headR * 0.2);
+
+          ctx.beginPath();
+          ctx.arc(headR * 0.92 + hatWave, -headR * 1.0 + hatWave * 0.4, headR * 0.22, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        } else if (arch === 'REINDEER') {
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          ctx.moveTo(-headR * 0.52, -headR * 0.78);
+          ctx.lineTo(-headR * 0.85, -headR * 1.45);
+          ctx.moveTo(-headR * 0.72, -headR * 1.18);
+          ctx.lineTo(-headR * 1.05, -headR * 1.28);
+
+          ctx.moveTo(headR * 0.52, -headR * 0.78);
+          ctx.lineTo(headR * 0.85, -headR * 1.45);
+          ctx.moveTo(headR * 0.72, -headR * 1.18);
+          ctx.lineTo(headR * 1.05, -headR * 1.28);
+          ctx.stroke();
+        } else if (arch === 'SNOWMAN') {
+          ctx.fillStyle = '#1e293b';
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.7;
+          ctx.fillRect(-headR * 0.58, -headR * 1.38, headR * 1.16, headR * 0.65);
+          ctx.strokeRect(-headR * 0.58, -headR * 1.38, headR * 1.16, headR * 0.65);
+          ctx.fillRect(-headR * 0.92, -headR * 0.82, headR * 1.84, headR * 0.18);
+          ctx.strokeRect(-headR * 0.92, -headR * 0.82, headR * 1.84, headR * 0.18);
+          ctx.fillStyle = '#ef4444';
+          ctx.fillRect(-headR * 0.58, -headR * 0.96, headR * 1.16, headR * 0.16);
+        } else if (arch === 'TREE') {
+          ctx.fillStyle = '#facc15';
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) {
+            const rad = i % 2 === 0 ? headR * 0.42 : headR * 0.18;
+            const ang = -Math.PI / 2 + (i * Math.PI) / 5;
+            const px = Math.cos(ang) * rad;
+            const py = -headR * 1.18 + Math.sin(ang) * rad;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        } else if (arch === 'GINGERBREAD') {
+          ctx.fillStyle = '#fff1f2';
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(-headR * 0.35, -headR * 0.82, headR * 0.24, 0, Math.PI * 2);
+          ctx.arc(0, -headR * 0.9, headR * 0.28, 0, Math.PI * 2);
+          ctx.arc(headR * 0.35, -headR * 0.82, headR * 0.24, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(0, -headR * 0.92, headR * 0.11, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (arch === 'POLAR_BEAR') {
+          ctx.fillStyle = '#f43f5e';
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(-headR * 0.92, -headR * 0.18, headR * 0.26, 0, Math.PI * 2);
+          ctx.arc(headR * 0.92, -headR * 0.18, headR * 0.26, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.arc(0, -headR * 0.22, headR * 0.92, Math.PI * 1.08, Math.PI * 1.92);
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          ctx.ellipse(0, -headR * 1.16, headR * 0.62, headR * 0.18, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        const leftFootOffset = isMoving ? Math.sin(hero.animTime) * (ts * 0.075) : 0;
+        const rightFootOffset = isMoving ? -Math.sin(hero.animTime) * (ts * 0.075) : 0;
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(-headR * 0.54, headR * 1.14 + leftFootOffset, headR * 0.38, headR * 0.34, 2);
+        ctx.roundRect(headR * 0.16, headR * 1.14 + rightFootOffset, headR * 0.38, headR * 0.34, 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = cfg.color;
+        ctx.beginPath();
+        ctx.arc(0, headR * 0.62, headR * 0.32, 0, Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = cfg.armor;
+        ctx.beginPath();
+        ctx.roundRect(-headR * 0.66, headR * 0.56, headR * 1.32, headR * 0.7, 4.5);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = cfg.color;
+        ctx.fillRect(-headR * 0.64, headR * 0.98, headR * 1.28, headR * 0.15);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(-headR * 0.14, headR * 0.96, headR * 0.28, headR * 0.19);
+
+        ctx.fillStyle = cfg.armor;
+        ctx.beginPath();
+        ctx.arc(-headR * 0.74, headR * 0.76 + armSwing * 0.5, headR * 0.22, 0, Math.PI * 2);
+        ctx.arc(headR * 0.74, headR * 0.76 - armSwing * 0.5, headR * 0.22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        let lookX = 0;
+        let lookY = 0;
+        if (hero.dir === 'LEFT') lookX = -headR * 0.16;
+        if (hero.dir === 'RIGHT') lookX = headR * 0.16;
+        if (hero.dir === 'UP') lookY = -headR * 0.12;
+        if (hero.dir === 'DOWN') lookY = headR * 0.08;
+
+        ctx.fillStyle = 'rgba(251, 113, 133, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(-headR * 0.52 + lookX * 0.6, headR * 0.14 + lookY * 0.6, headR * 0.15, headR * 0.09, 0, 0, Math.PI * 2);
+        ctx.ellipse(headR * 0.52 + lookX * 0.6, headR * 0.14 + lookY * 0.6, headR * 0.15, headR * 0.09, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const isBlinking = Math.sin(nowSec * 2.1 + hero.x * 3.1) > 0.975;
+        const eyeY = -headR * 0.05 + lookY;
+        const leftEyeX = -headR * 0.30 + lookX;
+        const rightEyeX = headR * 0.30 + lookX;
+
+        if (hero.stunTimer > 0) {
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 2;
+          const drawCross = (ex, ey) => {
+            const s = headR * 0.12;
+            ctx.beginPath();
+            ctx.moveTo(ex - s, ey - s);
+            ctx.lineTo(ex + s, ey + s);
+            ctx.moveTo(ex + s, ey - s);
+            ctx.lineTo(ex - s, ey + s);
+            ctx.stroke();
+          };
+          drawCross(leftEyeX, eyeY);
+          drawCross(rightEyeX, eyeY);
+        } else if (isBlinking) {
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(leftEyeX - headR * 0.13, eyeY);
+          ctx.lineTo(leftEyeX + headR * 0.13, eyeY);
+          ctx.moveTo(rightEyeX - headR * 0.13, eyeY);
+          ctx.lineTo(rightEyeX + headR * 0.13, eyeY);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(leftEyeX, eyeY, headR * 0.15, 0, Math.PI * 2);
+          ctx.arc(rightEyeX, eyeY, headR * 0.15, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = cfg.visor;
+          ctx.beginPath();
+          ctx.arc(leftEyeX - headR * 0.03, eyeY - headR * 0.04, headR * 0.065, 0, Math.PI * 2);
+          ctx.arc(rightEyeX - headR * 0.03, eyeY - headR * 0.04, headR * 0.065, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+
+        const barW = ts * 0.72;
+        const barH = Math.max(3.5, ts * 0.085);
+        const bx = cx - barW / 2;
+        const by = cy - ts * 0.45 - bob;
+        const pct = Math.max(0, Math.min(1, hero.stamina / hero.maxStamina));
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(bx - 1, by - 1, barW + 2, barH + 2);
+        ctx.fillStyle = pct > 0.45 ? '#38bdf8' : pct > 0.2 ? '#facc15' : '#f43f5e';
+        ctx.fillRect(bx, by, barW * pct, barH);
+      }
+
+      bindEvents() {
+        window.addEventListener('resize', () => this.resizeCanvas());
+
+        this.canvas.addEventListener('click', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const scaleX = this.canvas.width / rect.width;
+          const scaleY = this.canvas.height / rect.height;
+          const clickX = ((e.clientX - rect.left) * scaleX) / this.tileSize;
+          const clickY = ((e.clientY - rect.top) * scaleY) / this.tileSize;
+
+          let clickedHero = null;
+          let bestDist = 0.68;
+          for (const h of this.heroes) {
+            if (h.state !== 'WORK') continue;
+            const d = Math.hypot(h.x - clickX, h.y - clickY);
+            if (d < bestDist) {
+              bestDist = d;
+              clickedHero = h;
+            }
+          }
+
+          if (clickedHero) {
+            this.selectHeroForManual(clickedHero.id);
+          } else if (this.selectedHeroId) {
+            this.deselectHero();
+          }
+        });
+
+        window.addEventListener('keydown', (e) => {
+          this.keys[e.code] = true;
+          if (e.code === 'Space' && this.selectedHeroId) {
+            e.preventDefault();
+            this.manualPlaceBomb();
+          } else if (e.code === 'Escape') {
+            if (this.selectedHeroId) this.deselectHero();
+            ui.closeAllModals();
+          }
+        });
+
+        window.addEventListener('keyup', (e) => {
+          this.keys[e.code] = false;
+        });
+
+        document.querySelectorAll('.dpad-btn').forEach(btn => {
+          const dir = btn.getAttribute('data-dir');
+          const startDir = (ev) => {
+            ev.preventDefault();
+            this.touchDir = dir;
+          };
+          const endDir = (ev) => {
+            ev.preventDefault();
+            if (this.touchDir === dir) this.touchDir = null;
+          };
+          btn.addEventListener('pointerdown', startDir);
+          btn.addEventListener('pointerup', endDir);
+          btn.addEventListener('pointerleave', endDir);
+          btn.addEventListener('pointercancel', endDir);
+        });
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 4. LỚP QUẢN LÝ GIAO DIỆN NGƯỜI DÙNG (UI MANAGER)
+     * =========================================================================
+     */
+    class UIManager {
+      constructor() {
+        this.activeModalId = null;
+        this.upgradeTab = 'LEVEL';
+        this.marketTab = 'BUY';
+        this.fuseMainId = null;
+        this.confirmCallback = null;
+      }
+
+      generateHeroAvatarSVG(hero, size = 56) {
+        const cfg = RARITIES[hero.rarity];
+        const arch = hero.archetype || 'SANTA';
+        let hatSvg = '';
+        if (arch === 'SANTA' || arch === 'ELF') {
+          const hatFill = arch === 'SANTA' ? '#dc2626' : '#16a34a';
+          hatSvg = `
+            <path d="M9 17 Q24 2 41 11 L38 17 Z" fill="${hatFill}" stroke="#0f172a" stroke-width="2"/>
+            <rect x="8" y="15" width="32" height="5" rx="2.5" fill="#f8fafc" stroke="#0f172a" stroke-width="1.8"/>
+            <circle cx="42" cy="11" r="4.5" fill="#f8fafc" stroke="#0f172a" stroke-width="1.8"/>
+          `;
+        } else if (arch === 'REINDEER') {
+          hatSvg = `
+            <path d="M16 15 L10 5 M13 10 L7 8 M32 15 L38 5 M35 10 L41 8" stroke="#78350f" stroke-width="2.6" stroke-linecap="round"/>
+          `;
+        } else if (arch === 'SNOWMAN') {
+          hatSvg = `
+            <rect x="15" y="4" width="18" height="10" rx="1.5" fill="#1e293b" stroke="#0f172a" stroke-width="1.8"/>
+            <rect x="10" y="13" width="28" height="4" rx="2" fill="#1e293b" stroke="#0f172a" stroke-width="1.8"/>
+            <rect x="15" y="11" width="18" height="2.5" fill="#ef4444"/>
+          `;
+        } else if (arch === 'TREE') {
+          hatSvg = `
+            <polygon points="24,3 26.5,8 32,8.5 27.8,12.2 29,17.5 24,14.5 19,17.5 20.2,12.2 16,8.5 21.5,8" fill="#facc15" stroke="#78350f" stroke-width="1.4"/>
+          `;
+        } else if (arch === 'GINGERBREAD') {
+          hatSvg = `
+            <circle cx="17" cy="14" r="4" fill="#fff1f2" stroke="#0f172a" stroke-width="1.5"/>
+            <circle cx="24" cy="12.5" r="4.8" fill="#fff1f2" stroke="#0f172a" stroke-width="1.5"/>
+            <circle cx="31" cy="14" r="4" fill="#fff1f2" stroke="#0f172a" stroke-width="1.5"/>
+            <circle cx="24" cy="12.5" r="2" fill="#ef4444"/>
+          `;
+        } else if (arch === 'POLAR_BEAR') {
+          hatSvg = `
+            <circle cx="10" cy="24" r="5" fill="#f43f5e" stroke="#0f172a" stroke-width="1.6"/>
+            <circle cx="38" cy="24" r="5" fill="#f43f5e" stroke="#0f172a" stroke-width="1.6"/>
+            <path d="M10 22 A14 14 0 0 1 38 22" fill="none" stroke="#fef08a" stroke-width="2.2"/>
+          `;
+        } else {
+          hatSvg = `
+            <ellipse cx="24" cy="7.5" rx="11" ry="3.2" fill="none" stroke="#fef08a" stroke-width="2.4"/>
+          `;
+        }
+
+        const propSvg = (arch === 'ANGEL' || arch === 'TREE')
+          ? `<line x1="39" y1="42" x2="41" y2="23" stroke="#fef08a" stroke-width="2.2"/><circle cx="41.5" cy="22" r="4.2" fill="${arch === 'ANGEL' ? '#fef08a' : '#ef4444'}" stroke="#0f172a" stroke-width="1.5"/>`
+          : (arch === 'SNOWMAN' || arch === 'ELF')
+            ? `<path d="M39 42 L40 26 A3.2 3.2 0 1 1 44 26" fill="none" stroke="#ef4444" stroke-width="2.4" stroke-linecap="round"/>`
+            : `<circle cx="41" cy="34" r="4.8" fill="${arch === 'SANTA' ? '#dc2626' : '#facc15'}" stroke="#0f172a" stroke-width="1.5"/>`;
+
+        return `
+          <svg width="${size}" height="${size}" viewBox="0 0 48 48" class="shrink-0 drop-shadow">
+            ${cfg.aura ? `<circle cx="24" cy="25" r="21" fill="${cfg.color}" opacity="0.24"/>` : ''}
+            ${cfg.cape ? `<path d="M12 31 L36 31 L40 45 L8 45 Z" fill="${cfg.color}" stroke="#0f172a" stroke-width="2"/>` : ''}
+            <rect x="13" y="32" width="22" height="12" rx="4" fill="${cfg.armor}" stroke="#0f172a" stroke-width="2"/>
+            <rect x="14" y="38" width="20" height="3" fill="${cfg.color}"/>
+            <rect x="21.5" y="37.5" width="5" height="4" fill="#fef08a"/>
+            ${propSvg}
+            <circle cx="24" cy="24" r="11.5" fill="${cfg.armor}" stroke="#0f172a" stroke-width="2.2"/>
+            <ellipse cx="15.5" cy="26.5" rx="2.8" ry="1.6" fill="#fb7185" opacity="0.5"/>
+            <ellipse cx="32.5" cy="26.5" rx="2.8" ry="1.6" fill="#fb7185" opacity="0.5"/>
+            <circle cx="19.5" cy="24" r="2.8" fill="#0f172a"/>
+            <circle cx="28.5" cy="24" r="2.8" fill="#0f172a"/>
+            <circle cx="18.7" cy="23.1" r="1.15" fill="${cfg.visor}"/>
+            <circle cx="27.7" cy="23.1" r="1.15" fill="${cfg.visor}"/>
+            ${hatSvg}
+          </svg>
+        `;
+      }
+
+      openModal(modalId) {
+        sound.playClick();
+        const backdrop = document.getElementById('modalBackdrop');
+        if (!backdrop) return;
+
+        ['heroesModal', 'gachaModal', 'houseModal', 'upgradeModal', 'marketModal', 'settingsModal', 'confirmModal'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('hidden');
+        });
+
+        const target = document.getElementById(modalId);
+        if (!target) return;
+
+        backdrop.classList.remove('hidden');
+        target.classList.remove('hidden');
+        this.activeModalId = modalId;
+
+        if (modalId === 'heroesModal') this.renderHeroesModal();
+        if (modalId === 'houseModal') this.renderHouseModal();
+        if (modalId === 'upgradeModal') this.renderUpgradeModal();
+        if (modalId === 'marketModal') this.renderMarketModal();
+        if (modalId === 'settingsModal') {
+          const chk = document.getElementById('chkAutoRest');
+          if (chk) chk.checked = window.game ? window.game.autoRest : false;
+        }
+      }
+
+      closeAllModals() {
+        const backdrop = document.getElementById('modalBackdrop');
+        if (backdrop) backdrop.classList.add('hidden');
+        this.activeModalId = null;
+        this.confirmCallback = null;
+      }
+
+      openConfirm(icon, title, message, onYes) {
+        this.confirmCallback = onYes;
+        const backdrop = document.getElementById('modalBackdrop');
+        const confirmBox = document.getElementById('confirmModal');
+        document.getElementById('confirmIcon').textContent = icon;
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+
+        const yesBtn = document.getElementById('confirmYesBtn');
+        yesBtn.onclick = () => {
+          const cb = this.confirmCallback;
+          this.closeConfirm();
+          if (cb) cb();
+        };
+
+        if (backdrop) backdrop.classList.remove('hidden');
+        if (confirmBox) confirmBox.classList.remove('hidden');
+      }
+
+      closeConfirm() {
+        const confirmBox = document.getElementById('confirmModal');
+        if (confirmBox) confirmBox.classList.add('hidden');
+        if (!this.activeModalId) {
+          const backdrop = document.getElementById('modalBackdrop');
+          if (backdrop) backdrop.classList.add('hidden');
+        }
+        this.confirmCallback = null;
+      }
+
+      confirmReset() {
+        this.openConfirm(
+          '🗑️',
+          'Xóa Toàn Bộ Dữ Liệu?',
+          'Hành động này sẽ xóa sạch BCOIN, đội hình Hero và màn chơi hiện tại. Bạn có chắc chắn?',
+          () => {
+            if (window.game) window.game.resetAllData();
+          }
+        );
+      }
+
+      showRevealOverlay(heroesList, subtitle, title) {
+        const overlay = document.getElementById('gachaRevealOverlay');
+        const grid = document.getElementById('revealCardsGrid');
+        document.getElementById('revealSubtitle').textContent = subtitle;
+        document.getElementById('revealTitle').textContent = title;
+
+        grid.innerHTML = heroesList.map(h => {
+          const cfg = RARITIES[h.rarity];
+          return `
+            <div class="rarity-${h.rarity} border-2 rounded-2xl p-3.5 w-44 sm:w-48 flex flex-col items-center text-center shadow-2xl animate-pop-in">
+              <div class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-black/40 text-white mb-2">
+                ${cfg.name}
+              </div>
+              ${this.generateHeroAvatarSVG(h, 68)}
+              <div class="font-extrabold text-sm text-white mt-2 truncate w-full">${h.name}</div>
+              <div class="grid grid-cols-2 gap-1 w-full mt-2 text-[11px] bg-black/35 rounded-xl p-1.5 font-bold">
+                <div>⚔️ ${h.power}</div>
+                <div>⚡ ${h.speed}</div>
+                <div>💣 ${h.bombNum}</div>
+                <div>🔥 ${h.range}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        overlay.classList.remove('hidden');
+      }
+
+      closeRevealOverlay() {
+        sound.playClick();
+        document.getElementById('gachaRevealOverlay').classList.add('hidden');
+      }
+
+      showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+
+        const colors = {
+          success: 'bg-emerald-900/95 border-emerald-400 text-emerald-100',
+          error: 'bg-rose-950/95 border-rose-400 text-rose-100',
+          warn: 'bg-amber-950/95 border-amber-400 text-amber-100',
+          info: 'bg-slate-900/95 border-cyan-400 text-cyan-100'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `${colors[type] || colors.info} border-2 px-4 py-2 rounded-xl shadow-2xl text-xs sm:text-sm font-extrabold animate-pop-in text-center`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(-8px)';
+          toast.style.transition = 'all 0.25s ease';
+          setTimeout(() => toast.remove(), 260);
+        }, 2400);
+      }
+
+      pulseBcoinHud() {
+        const el = document.getElementById('hudBcoin');
+        if (!el) return;
+        el.classList.remove('coin-pulse');
+        void el.offsetWidth;
+        el.classList.add('coin-pulse');
+      }
+
+      updateAllHUD() {
+        if (!window.game) return;
+        const g = window.game;
+        const hudBcoin = document.getElementById('hudBcoin');
+        const hudWorking = document.getElementById('hudWorking');
+        const hudStage = document.getElementById('hudStage');
+        const badgeTotal = document.getElementById('badgeHeroesTotal');
+        const chkAuto = document.getElementById('chkAutoRest');
+
+        if (hudBcoin) hudBcoin.textContent = g.bcoin.toFixed(2);
+        if (hudWorking) hudWorking.textContent = g.getWorkingCount();
+        if (hudStage) hudStage.textContent = g.stage;
+        if (badgeTotal) badgeTotal.textContent = g.heroes.length;
+        if (chkAuto) chkAuto.checked = g.autoRest;
+
+        this.updateLiveBars();
+      }
+
+      updateLiveBars() {
+        if (!window.game) return;
+        const g = window.game;
+        const hudBcoin = document.getElementById('hudBcoin');
+        const hudChests = document.getElementById('hudChests');
+        const hudStageBar = document.getElementById('hudStageBar');
+
+        if (hudBcoin) hudBcoin.textContent = g.bcoin.toFixed(2);
+
+        const remaining = g.getRemainingChestsCount();
+        const total = Math.max(1, g.totalStageChests);
+        const cleared = Math.max(0, total - remaining);
+        if (hudChests) hudChests.textContent = `${cleared}/${total}`;
+        if (hudStageBar) hudStageBar.style.width = `${Math.min(100, (cleared / total) * 100)}%`;
+      }
+
+      renderHeroesModal() {
+        if (!window.game) return;
+        const g = window.game;
+        const container = document.getElementById('heroesListContainer');
+        const filter = document.getElementById('heroFilterRarity')?.value || 'ALL';
+
+        document.getElementById('modalWorkCount').textContent = `${g.getWorkingCount()}/${MAX_WORK_HEROES}`;
+        document.getElementById('modalHomeCount').textContent = `${g.getHomeCount()}/${g.getHomeCapacity()}`;
+
+        const list = g.heroes.filter(h => filter === 'ALL' || h.rarity === filter);
+        if (list.length === 0) {
+          container.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400 text-sm">Không có Hero nào thuộc bậc này. Hãy vào mục <strong>Triệu Hồi</strong> để chiêu mộ thêm!</div>`;
+          return;
+        }
+
+        container.innerHTML = list.map(h => {
+          const cfg = RARITIES[h.rarity];
+          const staPct = Math.max(0, Math.min(100, (h.stamina / h.maxStamina) * 100));
+          const skillBadges = h.skills.map(skKey => {
+            const sk = SKILLS[skKey];
+            return sk ? `<span title="${sk.desc}" class="text-[10px] bg-slate-950/70 border border-slate-600 px-1.5 py-0.5 rounded-md font-bold text-amber-200">${sk.icon} ${sk.name}</span>` : '';
+          }).join('');
+
+          return `
+            <div class="bg-slate-900/90 border-2 rounded-2xl p-3 flex flex-col justify-between gap-2.5 shadow-lg" style="border-color: ${cfg.color}66">
+              <div class="flex items-start gap-2.5">
+                <div class="rarity-${h.rarity} border rounded-xl p-1 shrink-0">
+                  ${this.generateHeroAvatarSVG(h, 54)}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="font-extrabold text-sm text-white truncate">${h.name}</span>
+                    <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0" style="background: ${cfg.color}28; color: ${cfg.color}; border: 1px solid ${cfg.color}88">
+                      ${cfg.name} • Lv.${h.level}
+                    </span>
+                  </div>
+
+                  <!-- Stamina Bar -->
+                  <div class="mt-1.5">
+                    <div class="flex justify-between text-[10px] text-slate-300 font-bold mb-0.5">
+                      <span>⚡ Stamina</span>
+                      <span>${Math.floor(h.stamina)}/${h.maxStamina}</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-700">
+                      <div class="h-full bg-gradient-to-r from-sky-400 to-cyan-300 transition-all" style="width: ${staPct}%"></div>
+                    </div>
+                  </div>
+
+                  <!-- Stats -->
+                  <div class="grid grid-cols-4 gap-1 mt-2 text-[11px] font-bold text-slate-200 bg-slate-800/80 rounded-lg px-2 py-1 text-center">
+                    <div title="Sức mạnh nổ">💣 ${h.power}</div>
+                    <div title="Tốc độ di chuyển">🏃 ${h.speed}</div>
+                    <div title="Số bom tối đa">🧨 ${h.bombNum}</div>
+                    <div title="Tầm nổ">🔥 ${h.range}</div>
+                  </div>
+
+                  ${skillBadges ? `<div class="flex flex-wrap gap-1 mt-1.5">${skillBadges}</div>` : ''}
+                </div>
+              </div>
+
+              <!-- State Action Buttons -->
+              <div class="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-800">
+                <button onclick="game.setHeroState('${h.id}', 'WORK')" class="arcade-btn text-xs font-extrabold py-1.5 rounded-lg ${h.state === 'WORK' ? 'bg-emerald-500 border-emerald-800 text-slate-950' : 'bg-slate-800 border-slate-950 text-slate-300'}">
+                  ⚔️ Làm
+                </button>
+                <button onclick="game.setHeroState('${h.id}', 'REST')" class="arcade-btn text-xs font-extrabold py-1.5 rounded-lg ${h.state === 'REST' ? 'bg-sky-500 border-sky-800 text-slate-950' : 'bg-slate-800 border-slate-950 text-slate-300'}">
+                  💤 Nghỉ
+                </button>
+                <button onclick="game.setHeroState('${h.id}', 'HOME')" class="arcade-btn text-xs font-extrabold py-1.5 rounded-lg ${h.state === 'HOME' ? 'bg-amber-400 border-amber-700 text-slate-950' : 'bg-slate-800 border-slate-950 text-slate-300'}">
+                  🏠 Vào Nhà
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      renderHouseModal() {
+        if (!window.game) return;
+        const g = window.game;
+        const curHouse = HOUSES[g.houseLevel];
+        const nextHouse = g.houseLevel < HOUSES.length - 1 ? HOUSES[g.houseLevel + 1] : null;
+        const body = document.getElementById('houseModalBody');
+
+        const homeHeroes = g.heroes.filter(h => h.state === 'HOME');
+
+        body.innerHTML = `
+          <div class="bg-slate-900/90 border-2 border-emerald-500/60 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+              <div class="w-16 h-16 rounded-2xl bg-emerald-950 border-2 border-emerald-400 flex items-center justify-center text-4xl shadow-lg">
+                ${curHouse.icon}
+              </div>
+              <div>
+                <div class="text-xs font-bold text-emerald-300 uppercase">Cấp Độ Hiện Tại: Cấp ${curHouse.level}</div>
+                <div class="text-lg font-extrabold text-white">${curHouse.name}</div>
+                <div class="text-xs text-slate-300 mt-0.5">${curHouse.desc}</div>
+                <div class="flex flex-wrap gap-2 mt-2 text-xs font-bold">
+                  <span class="bg-slate-800 px-2.5 py-0.5 rounded-lg text-cyan-300">Sức chứa: ${homeHeroes.length}/${curHouse.slots} Hero</span>
+                  <span class="bg-slate-800 px-2.5 py-0.5 rounded-lg text-amber-300">Tốc độ hồi: x${curHouse.mult.toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+
+            ${nextHouse ? `
+              <button onclick="game.upgradeHouse()" ${g.bcoin < nextHouse.cost ? 'disabled' : ''} class="arcade-btn bg-gradient-to-b from-amber-400 to-orange-600 border-orange-950 text-slate-950 px-4 py-3 rounded-xl font-extrabold text-xs sm:text-sm shrink-0 flex flex-col items-center">
+                <span>⬆️ NÂNG CẤP</span>
+                <span class="text-[11px] bg-black/20 text-white px-2.5 py-0.5 rounded-full mt-1">${nextHouse.cost} BCOIN</span>
+              </button>
+            ` : `
+              <div class="bg-amber-500/20 border border-amber-400 text-amber-300 px-4 py-2 rounded-xl font-extrabold text-xs">
+                👑 ĐÃ ĐẠT CẤP TỐI ĐA
+              </div>
+            `}
+          </div>
+
+          <div class="bg-slate-900/70 border border-slate-700 rounded-2xl p-3.5">
+            <div class="flex items-center justify-between mb-2.5">
+              <span class="text-xs font-extrabold text-cyan-300 uppercase">Hero Đang Nghỉ Trong Nhà (${homeHeroes.length}/${curHouse.slots})</span>
+              <button onclick="game.fillHomeSlots()" class="arcade-btn bg-emerald-600 border-emerald-900 text-xs font-bold px-3 py-1 rounded-lg">
+                + Tự Động Lấp Đầy
+              </button>
+            </div>
+            ${homeHeroes.length === 0 ? `
+              <div class="text-center py-6 text-xs text-slate-400">Chưa có Hero nào trong nhà. Bấm "Vào Nhà" ở mục Anh Hùng hoặc "Tự Động Lấp Đầy".</div>
+            ` : `
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ${homeHeroes.map(h => {
+                  const pct = Math.max(0, Math.min(100, (h.stamina / h.maxStamina) * 100));
+                  return `
+                    <div class="flex items-center gap-2.5 bg-slate-800/90 border border-slate-700 rounded-xl p-2">
+                      ${this.generateHeroAvatarSVG(h, 42)}
+                      <div class="flex-1 min-w-0">
+                        <div class="text-xs font-extrabold text-white truncate">${h.name}</div>
+                        <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden mt-1">
+                          <div class="h-full bg-emerald-400" style="width: ${pct}%"></div>
+                        </div>
+                        <div class="text-[10px] text-emerald-300 font-bold mt-0.5">${Math.floor(h.stamina)}/${h.maxStamina} STA</div>
+                      </div>
+                      <button onclick="game.setHeroState('${h.id}', 'WORK')" class="arcade-btn bg-sky-600 border-sky-900 text-[10px] font-extrabold px-2 py-1 rounded-lg">Ra Trận</button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        `;
+      }
+
+      switchUpgradeTab(tab) {
+        sound.playClick();
+        this.upgradeTab = tab;
+        this.fuseMainId = null;
+        const btnLvl = document.getElementById('tabBtnLevelUp');
+        const btnFuse = document.getElementById('tabBtnFuse');
+
+        if (tab === 'LEVEL') {
+          btnLvl.className = 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-purple-600 text-white border-t border-x border-purple-400';
+          btnFuse.className = 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-slate-800 text-slate-400 hover:text-white';
+        } else {
+          btnFuse.className = 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-purple-600 text-white border-t border-x border-purple-400';
+          btnLvl.className = 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-slate-800 text-slate-400 hover:text-white';
+        }
+        this.renderUpgradeModal();
+      }
+
+      renderUpgradeModal() {
+        if (!window.game) return;
+        const g = window.game;
+        const body = document.getElementById('upgradeModalBody');
+
+        if (this.upgradeTab === 'LEVEL') {
+          body.innerHTML = `
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${g.heroes.map(h => {
+                const cfg = RARITIES[h.rarity];
+                const cost = h.level * 50;
+                return `
+                  <div class="bg-slate-900/90 border border-slate-700 rounded-xl p-3 flex items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      ${this.generateHeroAvatarSVG(h, 48)}
+                      <div class="min-w-0">
+                        <div class="text-xs sm:text-sm font-extrabold text-white truncate">${h.name}</div>
+                        <div class="text-[11px] font-bold" style="color: ${cfg.color}">${cfg.name} • Cấp ${h.level}</div>
+                        <div class="text-[11px] text-slate-300 font-semibold mt-0.5">💣 ${h.power} • ⚡ ${h.maxStamina} STA • 🔥 ${h.range}</div>
+                      </div>
+                    </div>
+                    <button onclick="game.levelUpHero('${h.id}')" ${g.bcoin < cost ? 'disabled' : ''} class="arcade-btn bg-gradient-to-b from-purple-500 to-indigo-700 border-indigo-950 px-3 py-2 rounded-xl text-xs font-extrabold shrink-0 flex flex-col items-center">
+                      <span>⬆️ TĂNG CẤP</span>
+                      <span class="text-[10px] text-amber-200 mt-0.5">${cost} BCOIN</span>
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        } else {
+          const mainHero = g.heroes.find(h => h.id === this.fuseMainId) || null;
+          const fodders = mainHero
+            ? g.heroes.filter(h => h.id !== mainHero.id && h.rarity === mainHero.rarity)
+            : [];
+
+          body.innerHTML = `
+            <div class="space-y-4">
+              <div class="bg-slate-900/80 border border-purple-500/50 rounded-xl p-3 text-xs text-slate-200">
+                Chọn <strong class="text-amber-300">Hero Chính</strong> trước, sau đó chọn một <strong class="text-rose-300">Hero Nguyên Liệu cùng bậc</strong> để dung hợp (+2 Cấp, +2 Power, +30 Stamina và 25% cơ hội thăng bậc độ hiếm!).
+              </div>
+
+              <div>
+                <div class="text-xs font-extrabold text-amber-300 mb-2">1. Chọn Hero Chính:</div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto pr-1">
+                  ${g.heroes.map(h => {
+                    const selected = mainHero && mainHero.id === h.id;
+                    return `
+                      <button onclick="ui.selectFuseMain('${h.id}')" class="flex items-center gap-2 p-2 rounded-xl border text-left transition cursor-pointer ${selected ? 'bg-purple-900/70 border-amber-400 ring-2 ring-amber-400/40' : 'bg-slate-900/80 border-slate-700 hover:border-slate-500'}">
+                        ${this.generateHeroAvatarSVG(h, 36)}
+                        <div class="min-w-0">
+                          <div class="text-xs font-extrabold text-white truncate">${h.name}</div>
+                          <div class="text-[10px] text-slate-300">${RARITIES[h.rarity].short} • Lv.${h.level}</div>
+                        </div>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+
+              ${mainHero ? `
+                <div>
+                  <div class="text-xs font-extrabold text-rose-300 mb-2">2. Chọn Hero Nguyên Liệu cùng bậc (${RARITIES[mainHero.rarity].name}) để hiến tế dung hợp:</div>
+                  ${fodders.length === 0 ? `
+                    <div class="text-xs text-slate-400 bg-slate-900/60 p-4 rounded-xl text-center border border-slate-800">
+                      Không có Hero nào khác cùng bậc <strong>${RARITIES[mainHero.rarity].name}</strong> để dung hợp.
+                    </div>
+                  ` : `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      ${fodders.map(f => `
+                        <div class="flex items-center justify-between bg-slate-900/90 border border-slate-700 rounded-xl p-2.5">
+                          <div class="flex items-center gap-2 min-w-0">
+                            ${this.generateHeroAvatarSVG(f, 40)}
+                            <div class="min-w-0">
+                              <div class="text-xs font-extrabold text-white truncate">${f.name}</div>
+                              <div class="text-[10px] text-slate-400">Lv.${f.level} • Power ${f.power}</div>
+                            </div>
+                          </div>
+                          <button onclick="game.fuseHeroes('${mainHero.id}', '${f.id}')" class="arcade-btn bg-gradient-to-b from-rose-500 to-pink-700 border-rose-950 px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0">
+                            🧬 Dung Hợp
+                          </button>
+                        </div>
+                      `).join('')}
+                    </div>
+                  `}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
+      }
+
+      selectFuseMain(heroId) {
+        sound.playClick();
+        this.fuseMainId = heroId;
+        this.renderUpgradeModal();
+      }
+
+      switchMarketTab(tab) {
+        sound.playClick();
+        this.marketTab = tab;
+        const tabs = {
+          BUY: document.getElementById('tabMarketBuy'),
+          SELL: document.getElementById('tabMarketSell'),
+          SWAP: document.getElementById('tabMarketSwap')
+        };
+        const activeClasses = {
+          BUY: 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-emerald-600 text-white border-t border-x border-emerald-400',
+          SELL: 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-amber-600 text-white border-t border-x border-amber-300',
+          SWAP: 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-cyan-600 text-white border-t border-x border-cyan-300'
+        };
+        Object.keys(tabs).forEach(k => {
+          if (!tabs[k]) return;
+          tabs[k].className = k === tab
+            ? activeClasses[k]
+            : 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-extrabold bg-slate-800 text-slate-400 hover:text-white';
+        });
+        this.renderMarketModal();
+      }
+
+      renderMarketModal() {
+        if (!window.game) return;
+        const g = window.game;
+        const body = document.getElementById('marketModalBody');
+        if (!body) return;
+
+        const balEl = document.getElementById('marketBcoinBal');
+        const cashEl = document.getElementById('marketCashBal');
+        const rateEl = document.getElementById('marketPriceTag');
+        if (balEl) balEl.textContent = `${g.bcoin.toFixed(2)} BCOIN`;
+        if (cashEl) cashEl.textContent = `${Math.round(g.cashBalance).toLocaleString('vi-VN')}đ`;
+        if (rateEl) rateEl.textContent = `${(g.bcoinRate * 100).toLocaleString('vi-VN')}đ / 100 BCOIN`;
+
+        const rateBar = `
+          <div class="bg-slate-900/90 border border-cyan-500/40 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div>
+              <span class="text-slate-300 font-semibold">Biến động giá BCOIN:</span>
+              <span class="text-cyan-300 font-extrabold ml-1">${g.bcoinRate.toLocaleString('vi-VN')}đ / 1 BCOIN</span>
+              <span class="text-amber-300 font-bold ml-1">(${(g.bcoinRate * 100).toLocaleString('vi-VN')}đ / 100 BCOIN)</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="game.adjustMarketRate(-150)" class="arcade-btn bg-slate-700 border-slate-900 px-2.5 py-1 rounded-lg font-extrabold">-150đ</button>
+              <button onclick="game.adjustMarketRate(150)" class="arcade-btn bg-slate-700 border-slate-900 px-2.5 py-1 rounded-lg font-extrabold">+150đ</button>
+            </div>
+          </div>
+        `;
+
+        if (this.marketTab === 'BUY') {
+          const packs = [
+            { bcoin: 50, vnd: 50 * g.bcoinRate, tag: 'Gói Khởi Động' },
+            { bcoin: 150, vnd: Math.round(150 * g.bcoinRate * 0.95), tag: 'Tiết Kiệm 5%' },
+            { bcoin: 400, vnd: Math.round(400 * g.bcoinRate * 0.9), tag: 'Ưu Đãi 10%' }
+          ];
+          body.innerHTML = rateBar + `
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              ${packs.map(p => `
+                <div class="bg-slate-900/90 border-2 border-emerald-500/50 rounded-2xl p-3.5 flex flex-col justify-between gap-3">
+                  <div>
+                    <div class="text-[10px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full inline-block">${p.tag}</div>
+                    <div class="text-xl font-extrabold text-amber-300 mt-2">+${p.bcoin} BCOIN</div>
+                    <div class="text-xs text-slate-300 mt-1">Thanh toán: <strong class="text-white">${p.vnd.toLocaleString('vi-VN')}đ</strong></div>
+                  </div>
+                  <button onclick="game.buyBcoinWithCash(${p.bcoin}, ${p.vnd})" ${g.cashBalance < p.vnd ? 'disabled' : ''} class="arcade-btn bg-gradient-to-b from-emerald-500 to-teal-700 border-teal-950 py-2 rounded-xl text-xs font-extrabold text-white">
+                    🛒 Mua Ngay
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else if (this.marketTab === 'SELL') {
+          const sellPacks = [25, 100, 250];
+          body.innerHTML = rateBar + `
+            <div class="text-xs text-slate-300 bg-slate-900/70 border border-slate-700 rounded-xl p-2.5">
+              Bán BCOIN để quy đổi về Ngân quỹ (phí giao dịch sàn 5%, quy đổi theo giá thị trường hiện tại).
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              ${sellPacks.map(amt => {
+                const estVnd = Math.round(amt * g.bcoinRate * 0.95);
+                return `
+                  <div class="bg-slate-900/90 border-2 border-amber-500/50 rounded-2xl p-3.5 flex flex-col justify-between gap-3">
+                    <div>
+                      <div class="text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full inline-block">Bán Nhanh</div>
+                      <div class="text-xl font-extrabold text-rose-300 mt-2">-${amt} BCOIN</div>
+                      <div class="text-xs text-slate-300 mt-1">Nhận về: <strong class="text-emerald-300">+${estVnd.toLocaleString('vi-VN')}đ</strong></div>
+                    </div>
+                    <button onclick="game.sellBcoinForCash(${amt})" ${g.bcoin < amt ? 'disabled' : ''} class="arcade-btn bg-gradient-to-b from-amber-400 to-orange-600 border-orange-950 text-slate-950 py-2 rounded-xl text-xs font-extrabold">
+                      💸 Bán BCOIN
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        } else {
+          body.innerHTML = rateBar + `
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="bg-slate-900/90 border border-sky-500/60 rounded-2xl p-3.5 flex flex-col justify-between gap-3">
+                <div>
+                  <div class="text-2xl">⚡</div>
+                  <div class="text-sm font-extrabold text-sky-300 mt-1">Nước Tăng Lực Noel</div>
+                  <div class="text-xs text-slate-300 mt-1">Hồi đầy 100% Stamina cho toàn bộ Hero hiện có.</div>
+                </div>
+                <button onclick="game.exchangeBcoinItem('FULL_STAMINA')" ${g.bcoin < 45 ? 'disabled' : ''} class="arcade-btn bg-sky-600 border-sky-900 py-2 rounded-xl text-xs font-extrabold">
+                  Đổi • 45 BCOIN
+                </button>
+              </div>
+
+              <div class="bg-slate-900/90 border border-rose-500/60 rounded-2xl p-3.5 flex flex-col justify-between gap-3">
+                <div>
+                  <div class="text-2xl">💥</div>
+                  <div class="text-sm font-extrabold text-rose-300 mt-1">Vé Kích Hoạt Siêu Bom</div>
+                  <div class="text-xs text-slate-300 mt-1">Xóa ngay thời gian hồi chiêu của Bom Siêu Cấp.</div>
+                </div>
+                <button onclick="game.exchangeBcoinItem('MEGA_READY')" ${g.bcoin < 30 ? 'disabled' : ''} class="arcade-btn bg-rose-600 border-rose-950 py-2 rounded-xl text-xs font-extrabold">
+                  Đổi • 30 BCOIN
+                </button>
+              </div>
+
+              <div class="bg-slate-900/90 border border-amber-400/70 rounded-2xl p-3.5 flex flex-col justify-between gap-3">
+                <div>
+                  <div class="text-2xl">🎄</div>
+                  <div class="text-sm font-extrabold text-amber-300 mt-1">Hộp Quà Hiếm Noel</div>
+                  <div class="text-xs text-slate-300 mt-1">Đổi lấy 1 Hero ngẫu nhiên từ bậc Hiếm đến Huyền Thoại.</div>
+                </div>
+                <button onclick="game.exchangeBcoinItem('RARE_GIFT')" ${g.bcoin < 180 ? 'disabled' : ''} class="arcade-btn bg-gradient-to-b from-amber-400 to-orange-600 border-orange-950 text-slate-950 py-2 rounded-xl text-xs font-extrabold">
+                  Đổi • 180 BCOIN
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    const ui = new UIManager();
+
+    /**
+     * =========================================================================
+     * 5. VÒNG LẶP CHÍNH (MAIN REQUESTANIMATIONFRAME LOOP)
+     * =========================================================================
+     */
+    const game = new BombCryptoGame();
+    let lastTimestamp = performance.now();
+
+    function gameLoop(now) {
+      const dt = (now - lastTimestamp) / 1000;
+      lastTimestamp = now;
+
+      game.update(dt);
+      game.render();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
